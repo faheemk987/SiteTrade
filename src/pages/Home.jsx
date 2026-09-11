@@ -102,14 +102,14 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               to="/explore"
-              className="inline-flex items-center gap-2 rounded-xl bg-charcoal px-6 py-3 text-[15px] font-medium text-cream shadow-sm transition-all duration-200 hover:bg-gold"
+              className="inline-flex h-[3.6rem] w-[16rem] items-center justify-center gap-2 rounded-xl bg-charcoal px-6 text-[15px] font-medium text-cream shadow-sm transition-all duration-200 hover:bg-gold"
             >
               Explore Websites
               <ArrowRight size={16} />
             </Link>
             <Link
               to="/sell"
-              className="inline-flex items-center gap-2 rounded-xl border border-line bg-white px-6 py-3 text-[15px] font-medium text-charcoal shadow-sm transition-all duration-200 hover:border-gold"
+              className="inline-flex h-[3.6rem] w-[16rem] items-center justify-center gap-2 rounded-xl border border-line bg-white px-6 text-[15px] font-medium text-charcoal shadow-sm transition-all duration-200 hover:border-gold"
             >
               <Plus size={16} />
               Sell Your Website
