@@ -12,7 +12,7 @@ export default function Navbar() {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-40 bg-cream/90 backdrop-blur border-b border-line">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-line">
       <div className="mx-auto max-w-6xl px-6">
         <div className="flex h-16 items-center justify-between">
           <Link to="/" className="flex items-center gap-2 font-display text-xl text-charcoal">

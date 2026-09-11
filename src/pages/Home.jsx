@@ -8,6 +8,7 @@ import {
   Users,
   Mail,
   Sparkles,
+  Plus,
 } from "lucide-react";
 import WebsiteCard from "@/components/WebsiteCard";
 import { websites } from "@/data/websites";
@@ -18,7 +19,10 @@ const listingCards = [
     price: "$4,800",
     image: "https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=900&q=80",
     badge: "Verified Traffic",
-    tags: ["NewsUI", "Ghost CMS", "Stripe"],
+    category: "Blog & Media",
+    description: "Curated editorial platform covering generative AI with 24k active monthly subscribers.",
+    tags: ["Next.js", "Ghost CMS", "Stripe"],
+    primary: false,
   },
   {
     name: "OptiScale Cloud",
@@ -27,9 +31,9 @@ const listingCards = [
     badge: "Prime Listing",
     premiumLine: "Multiple: 3.8x TTM",
     stats: [
-      { label: "MRR", value: "$6.1k" },
-      { label: "Margin", value: "41%" },
-      { label: "Subs", value: "18.4k" },
+      { label: "MRR", value: "$1,420" },
+      { label: "Net Margin", value: "84%" },
+      { label: "Subscribers", value: "390" },
     ],
     primary: true,
   },
@@ -37,9 +41,11 @@ const listingCards = [
     name: "Loom & Grain",
     price: "$18,500",
     image: "https://images.unsplash.com/photo-1524758631624-e2822e304c36?auto=format&fit=crop&w=900&q=80",
+    category: "Ecommerce",
     description:
-      "Sustainable homeware brand with direct-to-consumer relationships and a 41% repeat rate.",
+      "Sustainable homewares brand with direct-to-consumer relationships and a 41% repeat rate.",
     tags: ["Shopify", "Klaviyo", "Meta Ads"],
+    primary: false,
   },
 ];
 
@@ -96,15 +102,16 @@ export default function Home() {
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             <Link
               to="/explore"
-              className="inline-flex items-center gap-2 bg-charcoal px-6 py-3 text-[15px] font-medium text-cream transition-colors hover:bg-gold"
+              className="inline-flex items-center gap-2 rounded-xl bg-charcoal px-6 py-3 text-[15px] font-medium text-cream shadow-sm transition-all duration-200 hover:bg-gold"
             >
               Explore Websites
               <ArrowRight size={16} />
             </Link>
             <Link
               to="/sell"
-              className="inline-flex items-center gap-2 border border-line bg-white px-6 py-3 text-[15px] font-medium text-charcoal transition-colors hover:border-gold"
+              className="inline-flex items-center gap-2 rounded-xl border border-line bg-white px-6 py-3 text-[15px] font-medium text-charcoal shadow-sm transition-all duration-200 hover:border-gold"
             >
+              <Plus size={16} />
               Sell Your Website
             </Link>
           </div>
@@ -118,72 +125,91 @@ export default function Home() {
               <article
                 key={card.name}
                 className={[
-                  "relative rounded-2xl border border-line bg-white p-5 shadow-sm transition-transform duration-200",
-                  isMiddle ? "md:-translate-y-4 md:shadow-[0_20px_45px_rgba(38,35,32,0.10)]" : "md:mt-4",
+                  "relative rounded-[1.5rem] border border-line bg-white p-4 shadow-sm transition-all duration-200 hover:shadow-md",
+                  isMiddle ? "md:-translate-y-4 md:shadow-[0_18px_38px_rgba(38,35,32,0.10)]" : "md:mt-4",
                 ].join(" ")}
               >
-                {card.badge && (
-                  <span
-                    className={[
-                      "absolute left-4 top-4 inline-flex rounded-full px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.08em]",
-                      isMiddle ? "bg-gold-soft text-gold" : "bg-cream text-charcoal-soft border border-line",
-                    ].join(" ")}
-                  >
-                    {card.badge}
-                  </span>
-                )}
-
-                <div className="overflow-hidden rounded-xl border border-line bg-cream/60">
-                  <img src={card.image} alt={card.name} className="h-44 w-full object-cover" />
-                </div>
-
-                <div className="mt-4 flex items-start justify-between gap-3">
-                  <p className="font-display text-2xl text-charcoal">{card.name}</p>
-                  <span className="font-display text-xl text-charcoal">{card.price}</span>
-                </div>
-
-                {card.premiumLine && (
-                  <p className="mt-2 text-sm font-medium text-charcoal-soft">{card.premiumLine}</p>
-                )}
-
-                {card.description && (
-                  <p className="mt-3 text-sm leading-6 text-charcoal-soft">{card.description}</p>
-                )}
-
-                {card.tags && (
-                  <div className="mt-4 flex flex-wrap gap-2">
-                    {card.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-line bg-cream px-2 py-1 text-[11px] text-charcoal-soft"
-                      >
-                        {tag}
+                {card.primary ? (
+                  <>
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center gap-2 rounded-full border border-gold/30 bg-gold-soft px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-gold">
+                        <span className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-gold/50 bg-white text-[8px] text-gold">
+                          ✓
+                        </span>
+                        {card.badge}
                       </span>
-                    ))}
-                  </div>
-                )}
 
-                {card.stats && (
-                  <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3">
-                    {card.stats.map((stat) => (
-                      <div key={stat.label} className="rounded-lg border border-line bg-cream/60 p-2 text-center">
-                        <p className="font-display text-lg text-charcoal">{stat.value}</p>
-                        <p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-charcoal-soft">
-                          {stat.label}
-                        </p>
+                      <span className="font-display text-4xl leading-none text-charcoal">{card.price}</span>
+                    </div>
+
+                    <p className="mt-2 text-sm font-medium text-charcoal-soft">{card.premiumLine}</p>
+
+                    <div className="mt-4 overflow-hidden rounded-xl border border-line bg-cream/60">
+                      <img src={card.image} alt={card.name} className="h-44 w-full object-cover" />
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-3 gap-2 border-t border-line pt-3">
+                      {card.stats.map((stat) => (
+                        <div key={stat.label} className="rounded-lg border border-line bg-cream/60 p-2 text-center">
+                          <p className="font-display text-lg text-charcoal">{stat.value}</p>
+                          <p className="mt-1 text-[10px] uppercase tracking-[0.08em] text-charcoal-soft">
+                            {stat.label}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <p className="font-display text-2xl text-charcoal">{card.name}</p>
+                      <Link
+                        to="/explore"
+                        className="inline-flex items-center gap-1 text-sm font-medium text-charcoal transition-colors hover:text-gold"
+                      >
+                        Explore
+                        <ArrowRight size={14} />
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="relative overflow-hidden rounded-xl border border-line bg-cream/60">
+                      <img src={card.image} alt={card.name} className="h-44 w-full object-cover" />
+                      {card.badge && (
+                        <span className="absolute left-3 top-3 inline-flex rounded-full border border-line bg-cream/90 px-2.5 py-1 text-[10px] font-medium uppercase tracking-[0.08em] text-charcoal-soft">
+                          {card.badge}
+                        </span>
+                      )}
+                      <span className="absolute bottom-3 right-3 rounded-md bg-charcoal/90 px-2.5 py-1 font-display text-xl text-cream">
+                        {card.price}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between gap-3">
+                      <p className="font-display text-2xl text-charcoal">{card.name}</p>
+                      {card.category && (
+                        <span className="rounded-full border border-line bg-cream px-2 py-1 text-[11px] text-charcoal-soft">
+                          {card.category}
+                        </span>
+                      )}
+                    </div>
+
+                    {card.description && (
+                      <p className="mt-3 text-sm leading-6 text-charcoal-soft">{card.description}</p>
+                    )}
+
+                    {card.tags && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {card.tags.map((tag) => (
+                          <span
+                            key={tag}
+                            className="rounded-full border border-line bg-cream px-2 py-1 text-[11px] text-charcoal-soft"
+                          >
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                )}
-
-                {card.primary && (
-                  <Link
-                    to="/explore"
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-medium text-charcoal transition-colors hover:text-gold"
-                  >
-                    Explore
-                    <ArrowRight size={14} />
-                  </Link>
+                    )}
+                  </>
                 )}
               </article>
             );
