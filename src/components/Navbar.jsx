@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
-import { Menu, X, ArrowLeftRight } from "lucide-react";
+import { Menu, X, ArrowLeftRight, UserRound } from "lucide-react";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -20,7 +20,7 @@ export default function Navbar() {
             SiteTrade
           </Link>
 
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden md:flex flex-1 items-center justify-center gap-8">
             {navLinks.map((link) => (
               <NavLink
                 key={link.to}
@@ -47,6 +47,13 @@ export default function Navbar() {
             >
               Sell Website
             </Link>
+            <button
+              type="button"
+              aria-label="User profile"
+              className="flex h-9 w-9 items-center justify-center rounded-full border border-line bg-white text-charcoal transition-colors hover:border-gold hover:text-gold"
+            >
+              <UserRound size={18} />
+            </button>
           </div>
 
           <button className="md:hidden text-charcoal" onClick={() => setOpen(!open)} aria-label="Toggle menu">
