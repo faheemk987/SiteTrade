@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "@/components/Button";
+import { api } from "@/lib/api";
 import { isRequired, isValidEmail } from "@/utils/validate";
 
 export default function Login() {
@@ -9,7 +10,7 @@ export default function Login() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!isValidEmail(form.email)) newErrors.email = "Enter a valid email address.";
@@ -23,12 +24,15 @@ export default function Login() {
     setErrors({});
     setLoading(true);
 
-    // Mock login — no backend. Simulate a short delay.
-    setTimeout(() => {
-      localStorage.setItem("sitetrade_auth", JSON.stringify({ email: form.email }));
-      setLoading(false);
+    try {
+      const data = await api.post("/auth/login", { email: form.email, password: form.password });
+      localStorage.setItem("sitetrade_auth", JSON.stringify(data));
       navigate("/dashboard");
-    }, 700);
+    } catch (error) {
+      setErrors({ email: error.message });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

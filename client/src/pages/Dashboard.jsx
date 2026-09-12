@@ -1,11 +1,38 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Globe2, ListChecks, Eye } from "lucide-react";
 import StatsCard from "@/components/StatsCard";
-import { websites } from "@/data/websites";
+import { api } from "@/lib/api";
 
-const myWebsites = websites.slice(0, 4).map((site) => ({ ...site, status: "Active" }));
+const normalizeWebsite = (site) => ({
+  ...site,
+  id: site._id || site.id,
+  status: "Active",
+  price: Number(site.price) || 0,
+  category: site.category || "Other",
+});
 
 export default function Dashboard() {
+  const [myWebsites, setMyWebsites] = useState([]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchDashboardData = async () => {
+      try {
+        const data = await api.get("/users/my-websites");
+        if (!ignore) setMyWebsites((Array.isArray(data) ? data : []).map(normalizeWebsite));
+      } catch {
+        if (!ignore) setMyWebsites([]);
+      }
+    };
+
+    fetchDashboardData();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   return (
     <div>
       <h1 className="font-display text-3xl text-charcoal">Welcome Back!</h1>
@@ -13,7 +40,7 @@ export default function Dashboard() {
 
       <div className="mt-8 grid grid-cols-2 sm:grid-cols-3 gap-4">
         <StatsCard label="My Websites" value={myWebsites.length} icon={Globe2} />
-        <StatsCard label="Active Listings" value={myWebsites.filter((w) => w.status === "Active").length} icon={ListChecks} />
+        <StatsCard label="Active Listings" value={myWebsites.length} icon={ListChecks} />
         <StatsCard label="Total Views" value="1,248" icon={Eye} />
       </div>
 
@@ -41,7 +68,7 @@ export default function Dashboard() {
                 <tr key={site.id} className="border-b border-line last:border-0">
                   <td className="px-5 py-3 text-charcoal">{site.name}</td>
                   <td className="px-5 py-3 text-charcoal-soft">{site.category}</td>
-                  <td className="px-5 py-3 text-charcoal">${site.price.toLocaleString()}</td>
+                  <td className="px-5 py-3 text-charcoal">${Number(site.price || 0).toLocaleString()}</td>
                   <td className="px-5 py-3">
                     <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">{site.status}</span>
                   </td>

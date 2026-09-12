@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "@/components/Button";
+import { api } from "@/lib/api";
 import { isRequired, isValidEmail, minLength } from "@/utils/validate";
 
 export default function Register() {
@@ -9,7 +10,7 @@ export default function Register() {
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!isRequired(form.fullName)) newErrors.fullName = "Full name is required.";
@@ -23,8 +24,20 @@ export default function Register() {
     }
 
     setErrors({});
-    setSuccess(true);
-    setTimeout(() => navigate("/login"), 1200);
+
+    try {
+      await api.post("/auth/register", {
+        name: form.fullName,
+        email: form.email,
+        password: form.password,
+      });
+
+      setSuccess(true);
+      setTimeout(() => navigate("/login"), 1200);
+    } catch (error) {
+      setErrors({ email: error.message });
+      setSuccess(false);
+    }
   };
 
   return (

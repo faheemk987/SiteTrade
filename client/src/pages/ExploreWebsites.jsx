@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
-import { ArrowRight, ChevronDown, Search, SlidersHorizontal, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ChevronDown, Search, SlidersHorizontal, Sparkles } from "lucide-react";
 import WebsiteCard from "@/components/WebsiteCard";
 import EmptyState from "@/components/EmptyState";
-import { websites, technologies } from "@/data/websites";
+import { api } from "@/lib/api";
+import { technologies } from "@/data/websites";
 
 const categoryPills = [
   { label: "All Categories", value: "All Categories" },
@@ -34,23 +35,68 @@ const priceTierMap = {
   over20000: { min: 20000, max: Number.MAX_SAFE_INTEGER },
 };
 
+const normalizeWebsite = (site) => ({
+  ...site,
+  id: site._id || site.id,
+  image: site.image || site.screenshots?.[0] || "",
+  price: Number(site.price) || 0,
+  technology: Array.isArray(site.technology) ? site.technology : site.technology ? [site.technology] : [],
+  category: site.category || "Other",
+  description: site.description || "",
+  createdAt: site.createdAt || new Date().toISOString(),
+});
+
 export default function ExploreWebsites() {
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("All Categories");
   const [priceTier, setPriceTier] = useState("all");
   const [techFilter, setTechFilter] = useState("All Technologies");
   const [sortBy, setSortBy] = useState("newest");
+  const [sites, setSites] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchWebsites = async () => {
+      try {
+        const params = new URLSearchParams();
+        if (search.trim()) params.set("search", search.trim());
+        if (activeCategory !== "All Categories") params.set("category", activeCategory);
+        if (techFilter !== "All Technologies") params.set("technology", techFilter);
+        if (priceTier !== "all") {
+          const { min, max } = priceTierMap[priceTier];
+          params.set("minPrice", String(min));
+          params.set("maxPrice", String(max));
+        }
+
+        const data = await api.get(`/websites${params.toString() ? `?${params.toString()}` : ""}`);
+        if (!ignore) {
+          setSites((Array.isArray(data) ? data : []).map(normalizeWebsite));
+        }
+      } catch (error) {
+        if (!ignore) setSites([]);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    fetchWebsites();
+    return () => {
+      ignore = true;
+    };
+  }, [search, activeCategory, priceTier, techFilter, sortBy]);
 
   const results = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    const filtered = websites.filter((site) => {
+    const filtered = sites.filter((site) => {
       const matchesSearch =
         !query ||
         site.name.toLowerCase().includes(query) ||
-        site.description.toLowerCase().includes(query) ||
+        (site.description || "").toLowerCase().includes(query) ||
         site.category.toLowerCase().includes(query) ||
-        site.technology.some((item) => item.toLowerCase().includes(query));
+        (site.technology || []).some((item) => item.toLowerCase().includes(query));
 
       if (!matchesSearch) return false;
 
@@ -63,7 +109,7 @@ export default function ExploreWebsites() {
 
       if (!matchesCategory) return false;
 
-      if (techFilter !== "All Technologies" && !site.technology.includes(techFilter)) return false;
+      if (techFilter !== "All Technologies" && !(site.technology || []).includes(techFilter)) return false;
 
       const { min, max } = priceTierMap[priceTier];
       if (site.price < min || site.price > max) return false;
@@ -87,7 +133,7 @@ export default function ExploreWebsites() {
     }
 
     return sorted;
-  }, [search, activeCategory, priceTier, techFilter, sortBy]);
+  }, [sites, search, activeCategory, priceTier, techFilter, sortBy]);
 
   const resetFilters = () => {
     setSearch("");
@@ -244,7 +290,11 @@ export default function ExploreWebsites() {
         </section>
 
         <div className="mt-10">
-          {results.length > 0 ? (
+          {loading ? (
+            <div className="rounded-xl border border-[#E6E0D2] bg-white p-8 text-center text-sm text-charcoal-soft">
+              Loading websites...
+            </div>
+          ) : results.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {results.map((site) => (
                 <WebsiteCard key={site.id} {...site} />

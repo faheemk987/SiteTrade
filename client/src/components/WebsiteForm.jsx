@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { UploadCloud, X } from "lucide-react";
 import Button from "@/components/Button";
+import { api } from "@/lib/api";
 import { categories } from "@/data/websites";
 import { isRequired, isValidEmail, isPositiveNumber } from "@/utils/validate";
 
@@ -37,6 +38,7 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
   const [form, setForm] = useState({ ...emptyForm, ...initialData });
   const [screenshots, setScreenshots] = useState(initialData?.screenshotPreviews || []);
   const [errors, setErrors] = useState({});
+  const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -61,18 +63,47 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = validate();
     setErrors(newErrors);
     if (Object.keys(newErrors).length > 0) return;
 
-    setSuccess(true);
-    if (onSubmit) onSubmit(form);
+    const payload = {
+      name: form.name,
+      url: form.url,
+      category: form.category,
+      age: form.age,
+      description: form.description,
+      fullDescription: form.description,
+      frontendTechnology: form.frontend,
+      backendTechnology: form.backend,
+      database: form.database,
+      technology: [form.frontend, form.backend, form.database, form.hosting].filter(Boolean),
+      hosting: form.hosting,
+      screenshots: screenshots.map((item) => item.url),
+      price: Number(form.price),
+      sellerEmail: form.sellerEmail,
+    };
 
-    if (!initialData) {
-      setForm(emptyForm);
-      setScreenshots([]);
+    try {
+      setSubmitError("");
+      if (initialData) {
+        await api.put(`/websites/${initialData.id}`, payload);
+      } else {
+        await api.post("/websites", payload);
+      }
+
+      setSuccess(true);
+      if (onSubmit) onSubmit(form);
+
+      if (!initialData) {
+        setForm(emptyForm);
+        setScreenshots([]);
+      }
+    } catch (error) {
+      setSubmitError(error.message || "Something went wrong. Please try again.");
+      setSuccess(false);
     }
   };
 
@@ -90,6 +121,10 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
 
   return (
     <form onSubmit={handleSubmit} className="space-y-10">
+      {submitError && (
+        <div className="rounded-md border border-red/20 bg-red/5 px-4 py-3 text-sm text-red">{submitError}</div>
+      )}
+
       {success && initialData && (
         <div className="bg-gold-soft text-charcoal text-sm rounded-md px-4 py-3">Changes saved successfully.</div>
       )}

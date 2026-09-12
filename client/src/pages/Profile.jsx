@@ -1,14 +1,28 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { User } from "lucide-react";
 import Button from "@/components/Button";
+import { api } from "@/lib/api";
 import { isRequired, isValidEmail } from "@/utils/validate";
 
 export default function Profile() {
-  const [form, setForm] = useState({ fullName: "Amir Khan", email: "amir.khan@example.com" });
+  const [form, setForm] = useState({ fullName: "", email: "" });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await api.get("/users/profile");
+        setForm({ fullName: data.name || "", email: data.email || "" });
+      } catch (error) {
+        setErrors({ email: error.message || "Unable to load your profile." });
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     const newErrors = {};
     if (!isRequired(form.fullName)) newErrors.fullName = "Full name is required.";
@@ -20,8 +34,14 @@ export default function Profile() {
       return;
     }
 
-    setErrors({});
-    setSuccess(true);
+    try {
+      setErrors({});
+      await api.put("/users/profile", { name: form.fullName, email: form.email });
+      setSuccess(true);
+    } catch (error) {
+      setErrors({ email: error.message || "Unable to update profile." });
+      setSuccess(false);
+    }
   };
 
   return (

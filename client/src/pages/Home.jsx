@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
@@ -11,7 +12,17 @@ import {
   Plus,
 } from "lucide-react";
 import WebsiteCard from "@/components/WebsiteCard";
-import { websites } from "@/data/websites";
+import { api } from "@/lib/api";
+
+const normalizeWebsite = (site) => ({
+  ...site,
+  id: site._id || site.id,
+  image: site.image || site.screenshots?.[0] || "",
+  price: Number(site.price) || 0,
+  technology: Array.isArray(site.technology) ? site.technology : site.technology ? [site.technology] : [],
+  category: site.category || "Other",
+  description: site.description || "",
+});
 
 const listingCards = [
   {
@@ -78,7 +89,30 @@ const steps = [
 ];
 
 export default function Home() {
-  const featured = websites.slice(0, 6);
+  const [featured, setFeatured] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchFeatured = async () => {
+      try {
+        const data = await api.get("/websites");
+        if (!ignore) {
+          setFeatured((Array.isArray(data) ? data : []).map(normalizeWebsite).slice(0, 6));
+        }
+      } catch {
+        if (!ignore) setFeatured([]);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    fetchFeatured();
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   return (
     <div>
@@ -236,11 +270,17 @@ export default function Home() {
           <p className="text-charcoal-soft mt-2">Explore selected websites available on SiteTrade.</p>
         </div>
 
-        <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {featured.map((site) => (
-            <WebsiteCard key={site.id} {...site} />
-          ))}
-        </div>
+        {loading ? (
+          <div className="mt-8 rounded-xl border border-line bg-white p-8 text-center text-sm text-charcoal-soft">
+            Loading featured websites...
+          </div>
+        ) : (
+          <div className="mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featured.map((site) => (
+              <WebsiteCard key={site.id} {...site} />
+            ))}
+          </div>
+        )}
 
         <div className="mt-10 text-center">
           <Link

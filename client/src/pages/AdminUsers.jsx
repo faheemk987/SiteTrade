@@ -1,15 +1,39 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
-import { users as initialUsers } from "@/data/users";
+import { api } from "@/lib/api";
 
 export default function AdminUsers() {
-  const [users, setUsers] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [toDelete, setToDelete] = useState(null);
 
-  const confirmDelete = () => {
-    setUsers((prev) => prev.filter((u) => u.id !== toDelete.id));
-    setToDelete(null);
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchUsers = async () => {
+      try {
+        const data = await api.get("/admin/users");
+        if (!ignore) setUsers(Array.isArray(data) ? data : []);
+      } catch {
+        if (!ignore) setUsers([]);
+      }
+    };
+
+    fetchUsers();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const confirmDelete = async () => {
+    try {
+      await api.delete(`/admin/users/${toDelete.id}`);
+      setUsers((prev) => prev.filter((u) => (u._id || u.id) !== (toDelete._id || toDelete.id)));
+      setToDelete(null);
+    } catch (error) {
+      setToDelete(null);
+      window.alert(error.message || "Unable to delete user.");
+    }
   };
 
   return (
@@ -29,10 +53,12 @@ export default function AdminUsers() {
           </thead>
           <tbody>
             {users.map((user) => (
-              <tr key={user.id} className="border-b border-line last:border-0">
+              <tr key={user._id || user.id} className="border-b border-line last:border-0">
                 <td className="px-5 py-3 text-charcoal">{user.name}</td>
                 <td className="px-5 py-3 text-charcoal-soft">{user.email}</td>
-                <td className="px-5 py-3 text-charcoal-soft">{user.joinedDate}</td>
+                <td className="px-5 py-3 text-charcoal-soft">
+                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}
+                </td>
                 <td className="px-5 py-3">
                   <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">{user.role}</span>
                 </td>

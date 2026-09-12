@@ -1,16 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
-import { websites as initialWebsites } from "@/data/websites";
+import { api } from "@/lib/api";
 
 export default function AdminWebsites() {
-  const [websites, setWebsites] = useState(initialWebsites);
+  const [websites, setWebsites] = useState([]);
   const [toDelete, setToDelete] = useState(null);
 
-  const confirmDelete = () => {
-    setWebsites((prev) => prev.filter((w) => w.id !== toDelete.id));
-    setToDelete(null);
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchWebsites = async () => {
+      try {
+        const data = await api.get("/admin/websites");
+        if (!ignore) setWebsites(Array.isArray(data) ? data : []);
+      } catch {
+        if (!ignore) setWebsites([]);
+      }
+    };
+
+    fetchWebsites();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const confirmDelete = async () => {
+    try {
+      await api.delete(`/admin/websites/${toDelete._id || toDelete.id}`);
+      setWebsites((prev) => prev.filter((w) => (w._id || w.id) !== (toDelete._id || toDelete.id)));
+      setToDelete(null);
+    } catch (error) {
+      setToDelete(null);
+      window.alert(error.message || "Unable to delete listing.");
+    }
   };
 
   return (
@@ -31,15 +55,17 @@ export default function AdminWebsites() {
           </thead>
           <tbody>
             {websites.map((site) => (
-              <tr key={site.id} className="border-b border-line last:border-0">
+              <tr key={site._id || site.id} className="border-b border-line last:border-0">
                 <td className="px-5 py-3 text-charcoal">{site.name}</td>
-                <td className="px-5 py-3 text-charcoal-soft">{site.sellerName}</td>
+                <td className="px-5 py-3 text-charcoal-soft">{site.seller?.name || site.sellerName || "Unknown"}</td>
                 <td className="px-5 py-3 text-charcoal-soft">{site.category}</td>
-                <td className="px-5 py-3 text-charcoal">${site.price.toLocaleString()}</td>
-                <td className="px-5 py-3 text-charcoal-soft">{site.createdAt}</td>
+                <td className="px-5 py-3 text-charcoal">${Number(site.price || 0).toLocaleString()}</td>
+                <td className="px-5 py-3 text-charcoal-soft">
+                  {site.createdAt ? new Date(site.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}
+                </td>
                 <td className="px-5 py-3">
                   <div className="flex gap-3 text-sm">
-                    <Link to={`/website/${site.id}`} className="text-charcoal-soft hover:text-charcoal">View</Link>
+                    <Link to={`/website/${site._id || site.id}`} className="text-charcoal-soft hover:text-charcoal">View</Link>
                     <button onClick={() => setToDelete(site)} className="text-red hover:underline">Delete</button>
                   </div>
                 </td>

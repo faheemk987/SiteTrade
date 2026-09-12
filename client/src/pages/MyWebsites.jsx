@@ -1,19 +1,54 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import Modal from "@/components/Modal";
 import Button from "@/components/Button";
 import EmptyState from "@/components/EmptyState";
-import { websites } from "@/data/websites";
+import { api } from "@/lib/api";
 
-const initialWebsites = websites.slice(0, 4).map((site) => ({ ...site, status: "Active" }));
+const normalizeWebsite = (site) => ({
+  ...site,
+  id: site._id || site.id,
+  status: "Active",
+  image: site.image || site.screenshots?.[0] || "",
+  price: Number(site.price) || 0,
+  category: site.category || "Other",
+  createdAt: site.createdAt || new Date().toISOString(),
+});
 
 export default function MyWebsites() {
-  const [myWebsites, setMyWebsites] = useState(initialWebsites);
+  const [myWebsites, setMyWebsites] = useState([]);
   const [toDelete, setToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  const confirmDelete = () => {
-    setMyWebsites((prev) => prev.filter((w) => w.id !== toDelete.id));
-    setToDelete(null);
+  useEffect(() => {
+    let ignore = false;
+
+    const fetchMyWebsites = async () => {
+      try {
+        const data = await api.get("/users/my-websites");
+        if (!ignore) setMyWebsites((Array.isArray(data) ? data : []).map(normalizeWebsite));
+      } catch {
+        if (!ignore) setMyWebsites([]);
+      } finally {
+        if (!ignore) setLoading(false);
+      }
+    };
+
+    fetchMyWebsites();
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  const confirmDelete = async () => {
+    try {
+      await api.delete(`/websites/${toDelete.id}`);
+      setMyWebsites((prev) => prev.filter((w) => (w.id || w._id) !== (toDelete.id || toDelete._id)));
+      setToDelete(null);
+    } catch (error) {
+      setToDelete(null);
+      window.alert(error.message || "Unable to delete listing.");
+    }
   };
 
   return (
@@ -25,7 +60,11 @@ export default function MyWebsites() {
         </Link>
       </div>
 
-      {myWebsites.length === 0 ? (
+      {loading ? (
+        <div className="mt-8 rounded-xl border border-line bg-white p-8 text-center text-sm text-charcoal-soft">
+          Loading your websites...
+        </div>
+      ) : myWebsites.length === 0 ? (
         <div className="mt-8">
           <EmptyState
             title="You haven't listed any websites yet."
