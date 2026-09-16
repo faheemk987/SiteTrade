@@ -54,37 +54,39 @@ export default function ExploreWebsites() {
   const [sortBy, setSortBy] = useState("newest");
   const [sites, setSites] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchWebsites = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const params = new URLSearchParams();
+      if (search.trim()) params.set("search", search.trim());
+      if (activeCategory !== "All Categories") params.set("category", activeCategory);
+      if (techFilter !== "All Technologies") params.set("technology", techFilter);
+      if (priceTier !== "all") {
+        const { min, max } = priceTierMap[priceTier];
+        params.set("minPrice", String(min));
+        params.set("maxPrice", String(max));
+      }
+
+      const data = await api.get(`/websites${params.toString() ? `?${params.toString()}` : ""}`);
+      setSites((Array.isArray(data) ? data : []).map(normalizeWebsite));
+    } catch (err) {
+      setSites([]);
+      setError(err.friendlyMessage || err.message || "Unable to load websites.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let ignore = false;
+    const timer = setTimeout(() => {
+      fetchWebsites();
+    }, 400);
 
-    const fetchWebsites = async () => {
-      try {
-        const params = new URLSearchParams();
-        if (search.trim()) params.set("search", search.trim());
-        if (activeCategory !== "All Categories") params.set("category", activeCategory);
-        if (techFilter !== "All Technologies") params.set("technology", techFilter);
-        if (priceTier !== "all") {
-          const { min, max } = priceTierMap[priceTier];
-          params.set("minPrice", String(min));
-          params.set("maxPrice", String(max));
-        }
-
-        const data = await api.get(`/websites${params.toString() ? `?${params.toString()}` : ""}`);
-        if (!ignore) {
-          setSites((Array.isArray(data) ? data : []).map(normalizeWebsite));
-        }
-      } catch (error) {
-        if (!ignore) setSites([]);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    };
-
-    fetchWebsites();
-    return () => {
-      ignore = true;
-    };
+    return () => clearTimeout(timer);
   }, [search, activeCategory, priceTier, techFilter, sortBy]);
 
   const results = useMemo(() => {
@@ -293,6 +295,17 @@ export default function ExploreWebsites() {
           {loading ? (
             <div className="rounded-xl border border-[#E6E0D2] bg-white p-8 text-center text-sm text-charcoal-soft">
               Loading websites...
+            </div>
+          ) : error ? (
+            <div className="rounded-xl border border-red/20 bg-red/5 p-8 text-center">
+              <p className="text-sm text-red">{error}</p>
+              <button
+                type="button"
+                onClick={fetchWebsites}
+                className="mt-4 rounded-md border border-red/20 bg-white px-4 py-2 text-sm font-medium text-charcoal hover:border-gold"
+              >
+                Try again
+              </button>
             </div>
           ) : results.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">

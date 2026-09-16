@@ -6,23 +6,23 @@ import { api } from "@/lib/api";
 export default function AdminUsers() {
   const [users, setUsers] = useState([]);
   const [toDelete, setToDelete] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let ignore = false;
-
     const fetchUsers = async () => {
       try {
         const data = await api.get("/admin/users");
-        if (!ignore) setUsers(Array.isArray(data) ? data : []);
-      } catch {
-        if (!ignore) setUsers([]);
+        setUsers(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setUsers([]);
+        setError(err.friendlyMessage || err.message || "Unable to load users.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchUsers();
-    return () => {
-      ignore = true;
-    };
   }, []);
 
   const confirmDelete = async () => {
@@ -40,39 +40,45 @@ export default function AdminUsers() {
     <div>
       <h1 className="font-display text-3xl text-charcoal">Users</h1>
 
-      <div className="mt-8 bg-white border border-line rounded-xl overflow-x-auto">
-        <table className="w-full text-sm min-w-[600px]">
-          <thead>
-            <tr className="border-b border-line text-left text-charcoal-soft">
-              <th className="px-5 py-3 font-medium">Name</th>
-              <th className="px-5 py-3 font-medium">Email</th>
-              <th className="px-5 py-3 font-medium">Joined Date</th>
-              <th className="px-5 py-3 font-medium">Role</th>
-              <th className="px-5 py-3 font-medium">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user._id || user.id} className="border-b border-line last:border-0">
-                <td className="px-5 py-3 text-charcoal">{user.name}</td>
-                <td className="px-5 py-3 text-charcoal-soft">{user.email}</td>
-                <td className="px-5 py-3 text-charcoal-soft">
-                  {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}
-                </td>
-                <td className="px-5 py-3">
-                  <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">{user.role}</span>
-                </td>
-                <td className="px-5 py-3">
-                  <div className="flex gap-3 text-sm">
-                    <button className="text-charcoal-soft hover:text-charcoal">View</button>
-                    <button onClick={() => setToDelete(user)} className="text-red hover:underline">Delete</button>
-                  </div>
-                </td>
+      {error && <div className="mt-4 rounded-md border border-red/20 bg-red/5 px-4 py-3 text-sm text-red">{error}</div>}
+
+      {loading ? (
+        <div className="mt-8 text-sm text-charcoal-soft">Loading users...</div>
+      ) : (
+        <div className="mt-8 bg-white border border-line rounded-xl overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
+            <thead>
+              <tr className="border-b border-line text-left text-charcoal-soft">
+                <th className="px-5 py-3 font-medium">Name</th>
+                <th className="px-5 py-3 font-medium">Email</th>
+                <th className="px-5 py-3 font-medium">Joined Date</th>
+                <th className="px-5 py-3 font-medium">Role</th>
+                <th className="px-5 py-3 font-medium">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+            </thead>
+            <tbody>
+              {users.map((user) => (
+                <tr key={user._id || user.id} className="border-b border-line last:border-0">
+                  <td className="px-5 py-3 text-charcoal">{user.name}</td>
+                  <td className="px-5 py-3 text-charcoal-soft">{user.email}</td>
+                  <td className="px-5 py-3 text-charcoal-soft">
+                    {user.createdAt ? new Date(user.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "-"}
+                  </td>
+                  <td className="px-5 py-3">
+                    <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">{user.role}</span>
+                  </td>
+                  <td className="px-5 py-3">
+                    <div className="flex gap-3 text-sm">
+                      <button className="text-charcoal-soft hover:text-charcoal">View</button>
+                      <button onClick={() => setToDelete(user)} className="text-red hover:underline">Delete</button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       <Modal open={!!toDelete} onClose={() => setToDelete(null)} title="Delete user?">
         <p className="text-sm text-charcoal-soft">

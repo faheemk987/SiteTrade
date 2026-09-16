@@ -19,25 +19,22 @@ export default function MyWebsites() {
   const [myWebsites, setMyWebsites] = useState([]);
   const [toDelete, setToDelete] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    let ignore = false;
-
     const fetchMyWebsites = async () => {
       try {
         const data = await api.get("/users/my-websites");
-        if (!ignore) setMyWebsites((Array.isArray(data) ? data : []).map(normalizeWebsite));
-      } catch {
-        if (!ignore) setMyWebsites([]);
+        setMyWebsites((Array.isArray(data) ? data : []).map(normalizeWebsite));
+      } catch (err) {
+        setMyWebsites([]);
+        setError(err.friendlyMessage || err.message || "Unable to load your websites.");
       } finally {
-        if (!ignore) setLoading(false);
+        setLoading(false);
       }
     };
 
     fetchMyWebsites();
-    return () => {
-      ignore = true;
-    };
   }, []);
 
   const confirmDelete = async () => {
@@ -47,7 +44,7 @@ export default function MyWebsites() {
       setToDelete(null);
     } catch (error) {
       setToDelete(null);
-      window.alert(error.message || "Unable to delete listing.");
+      window.alert(error.friendlyMessage || error.message || "Unable to delete listing.");
     }
   };
 
@@ -59,6 +56,8 @@ export default function MyWebsites() {
           <Button>+ Sell New Website</Button>
         </Link>
       </div>
+
+      {error && <div className="mt-4 rounded-md border border-red/20 bg-red/5 px-4 py-3 text-sm text-red">{error}</div>}
 
       {loading ? (
         <div className="mt-8 rounded-xl border border-line bg-white p-8 text-center text-sm text-charcoal-soft">

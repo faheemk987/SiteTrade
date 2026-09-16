@@ -22,40 +22,38 @@ export default function WebsiteDetails() {
   const { id } = useParams();
   const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  const fetchWebsite = async () => {
+    setLoading(true);
+    setError("");
+
+    try {
+      const data = await api.get(`/websites/${id}`);
+      const normalized = {
+        ...data,
+        id: data._id || data.id,
+        image: data.image || data.screenshots?.[0] || "",
+        screenshots: data.screenshots || [],
+        technology: Array.isArray(data.technology) ? data.technology : data.technology ? [data.technology] : [],
+        included: data.included || [],
+        sellerName: data.seller?.name || data.sellerName || "Seller",
+        sellerVerified: data.sellerVerified ?? true,
+        category: data.category || "Other",
+        description: data.description || "",
+        fullDescription: data.fullDescription || data.description || "",
+      };
+      setSite(normalized);
+    } catch (err) {
+      setSite(null);
+      setError(err.friendlyMessage || err.message || "Unable to load website details.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    let ignore = false;
-
-    const fetchWebsite = async () => {
-      try {
-        const data = await api.get(`/websites/${id}`);
-        if (!ignore) {
-          const normalized = {
-            ...data,
-            id: data._id || data.id,
-            image: data.image || data.screenshots?.[0] || "",
-            screenshots: data.screenshots || [],
-            technology: Array.isArray(data.technology) ? data.technology : data.technology ? [data.technology] : [],
-            included: data.included || [],
-            sellerName: data.seller?.name || data.sellerName || "Seller",
-            sellerVerified: data.sellerVerified ?? true,
-            category: data.category || "Other",
-            description: data.description || "",
-            fullDescription: data.fullDescription || data.description || "",
-          };
-          setSite(normalized);
-        }
-      } catch {
-        if (!ignore) setSite(null);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    };
-
     fetchWebsite();
-    return () => {
-      ignore = true;
-    };
   }, [id]);
 
   const [activeImage, setActiveImage] = useState("");
@@ -86,10 +84,20 @@ export default function WebsiteDetails() {
   if (!site) {
     return (
       <div className="mx-auto max-w-3xl px-6 py-24 text-center">
-        <h1 className="font-display text-3xl text-charcoal">Website not found</h1>
-        <Link to="/explore" className="mt-6 inline-block text-gold">
-          ← Back to Explore
-        </Link>
+        <h1 className="font-display text-3xl text-charcoal">{error ? "Website not found" : "Website not found"}</h1>
+        <p className="mt-4 text-sm text-charcoal-soft">{error || "The listing you requested could not be found."}</p>
+        <div className="mt-6 flex justify-center gap-3">
+          <button
+            type="button"
+            onClick={fetchWebsite}
+            className="rounded-md border border-line bg-white px-4 py-2 text-sm font-medium text-charcoal"
+          >
+            Try again
+          </button>
+          <Link to="/explore" className="inline-block rounded-md bg-charcoal px-4 py-2 text-sm font-medium text-cream">
+            ← Back to Explore
+          </Link>
+        </div>
       </div>
     );
   }

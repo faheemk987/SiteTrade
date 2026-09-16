@@ -8,6 +8,8 @@ export default function Profile() {
   const [form, setForm] = useState({ fullName: "", email: "" });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -15,7 +17,9 @@ export default function Profile() {
         const data = await api.get("/users/profile");
         setForm({ fullName: data.name || "", email: data.email || "" });
       } catch (error) {
-        setErrors({ email: error.message || "Unable to load your profile." });
+        setErrors({ email: error.friendlyMessage || error.message || "Unable to load your profile." });
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -36,13 +40,20 @@ export default function Profile() {
 
     try {
       setErrors({});
+      setSubmitting(true);
       await api.put("/users/profile", { name: form.fullName, email: form.email });
       setSuccess(true);
     } catch (error) {
-      setErrors({ email: error.message || "Unable to update profile." });
+      setErrors({ email: error.friendlyMessage || error.message || "Unable to update profile." });
       setSuccess(false);
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  if (loading) {
+    return <div className="text-center py-20 text-charcoal-soft">Loading profile...</div>;
+  }
 
   return (
     <div className="max-w-lg">
@@ -86,7 +97,7 @@ export default function Profile() {
             {errors.email && <p className="text-xs text-red mt-1">{errors.email}</p>}
           </div>
 
-          <Button type="submit">Update Profile</Button>
+          <Button type="submit" loading={submitting}>Update Profile</Button>
         </form>
       </div>
     </div>

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Button from "@/components/Button";
-import { api } from "@/lib/api";
+import api from "@/lib/api";
 import { isRequired, isValidEmail, minLength } from "@/utils/validate";
 
 export default function Register() {
@@ -9,6 +9,7 @@ export default function Register() {
   const [form, setForm] = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -24,6 +25,7 @@ export default function Register() {
     }
 
     setErrors({});
+    setLoading(true);
 
     try {
       await api.post("/auth/register", {
@@ -35,8 +37,10 @@ export default function Register() {
       setSuccess(true);
       setTimeout(() => navigate("/login"), 1200);
     } catch (error) {
-      setErrors({ email: error.message });
+      setErrors({ form: error.friendlyMessage || error.message || "Registration failed." });
       setSuccess(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -52,6 +56,8 @@ export default function Register() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+            {errors.form && <p className="rounded-md border border-red/20 bg-red/5 px-3 py-2 text-xs text-red">{errors.form}</p>}
+
             <div>
               <label className="block text-sm font-medium text-charcoal mb-1.5">Full Name</label>
               <input
@@ -96,7 +102,7 @@ export default function Register() {
               {errors.confirmPassword && <p className="text-xs text-red mt-1">{errors.confirmPassword}</p>}
             </div>
 
-            <Button type="submit" className="w-full">Create Account</Button>
+            <Button type="submit" className="w-full" loading={loading}>Create Account</Button>
           </form>
         )}
 

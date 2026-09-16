@@ -40,6 +40,7 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState("");
   const [success, setSuccess] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const update = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -88,6 +89,7 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
 
     try {
       setSubmitError("");
+      setLoading(true);
       if (initialData) {
         await api.put(`/websites/${initialData.id}`, payload);
       } else {
@@ -101,9 +103,13 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
         setForm(emptyForm);
         setScreenshots([]);
       }
+
+      setTimeout(() => navigate("/dashboard/websites"), 250);
     } catch (error) {
-      setSubmitError(error.message || "Something went wrong. Please try again.");
+      setSubmitError(error.friendlyMessage || error.message || "Something went wrong. Please try again.");
       setSuccess(false);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -262,7 +268,7 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
       </div>
 
       <div className="flex gap-3">
-        <Button type="submit">{submitLabel}</Button>
+        <Button type="submit" loading={loading}>{submitLabel}</Button>
         <Button type="button" variant="secondary" onClick={() => navigate(-1)}>
           Cancel
         </Button>

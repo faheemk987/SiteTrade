@@ -3,6 +3,8 @@ import { Routes, Route } from "react-router-dom";
 import MainLayout from "@/layouts/MainLayout";
 import DashboardLayout from "@/layouts/DashboardLayout";
 import AdminLayout from "@/layouts/AdminLayout";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import AdminRoute from "@/components/AdminRoute";
 
 import Home from "@/pages/Home";
 import ExploreWebsites from "@/pages/ExploreWebsites";
@@ -36,18 +38,22 @@ export default function App() {
       </Route>
 
       {/* Dashboard pages */}
-      <Route element={<DashboardLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/dashboard/websites" element={<MyWebsites />} />
-        <Route path="/dashboard/websites/edit/:id" element={<EditWebsite />} />
-        <Route path="/dashboard/profile" element={<Profile />} />
+      <Route element={<ProtectedRoute />}>
+        <Route element={<DashboardLayout />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/dashboard/websites" element={<MyWebsites />} />
+          <Route path="/dashboard/websites/edit/:id" element={<EditWebsite />} />
+          <Route path="/dashboard/profile" element={<Profile />} />
+        </Route>
       </Route>
 
       {/* Admin pages */}
-      <Route element={<AdminLayout />}>
-        <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/admin/websites" element={<AdminWebsites />} />
+      <Route element={<AdminRoute />}>
+        <Route element={<AdminLayout />}>
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/users" element={<AdminUsers />} />
+          <Route path="/admin/websites" element={<AdminWebsites />} />
+        </Route>
       </Route>
     </Routes>
   );
