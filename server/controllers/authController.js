@@ -3,6 +3,13 @@ const generateToken = require("../utils/generateToken");
 
 const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || "");
 
+const getEffectiveRole = (email) => {
+  const normalizedEmail = (email || "").trim().toLowerCase();
+  const adminEmail = (process.env.ADMIN_EMAIL || "").trim().toLowerCase();
+
+  return normalizedEmail && normalizedEmail === adminEmail ? "admin" : "user";
+};
+
 // @desc    Register a new user
 // @route   POST /api/auth/register
 // @access  Public
@@ -20,12 +27,14 @@ const registerUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Password must be at least 6 characters" });
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase();
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ success: false, message: "An account with this email already exists" });
     }
 
-    const user = await User.create({ name, email, password });
+    const role = getEffectiveRole(normalizedEmail);
+    const user = await User.create({ name, email: normalizedEmail, password, role });
     const token = generateToken(user._id, user.role);
 
     res.status(201).json({
@@ -55,9 +64,16 @@ const loginUser = async (req, res, next) => {
       return res.status(400).json({ success: false, message: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const normalizedEmail = email.toLowerCase();
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ success: false, message: "Invalid email or password" });
+    }
+
+    const expectedRole = getEffectiveRole(user.email);
+    if (user.role !== expectedRole) {
+      user.role = expectedRole;
+      await user.save();
     }
 
     const token = generateToken(user._id, user.role);

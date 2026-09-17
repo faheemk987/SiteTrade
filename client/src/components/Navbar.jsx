@@ -3,7 +3,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, ArrowLeftRight, UserRound } from "lucide-react";
 import { isAuthenticated } from "@/utils/auth";
 
-const navLinks = [
+const baseNavLinks = [
   { to: "/", label: "Home" },
   { to: "/explore", label: "Explore Websites" },
   { to: "/how-it-works", label: "How It Works" },
@@ -12,6 +12,9 @@ const navLinks = [
 export default function Navbar() {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const auth = JSON.parse(localStorage.getItem("sitetrade_auth") || "null");
+  const isAdmin = auth?.role === "admin";
+  const navLinks = isAdmin ? [...baseNavLinks, { to: "/admin", label: "Admin Dashboard" }] : baseNavLinks;
 
   const handleSellWebsite = () => {
     setOpen(false);

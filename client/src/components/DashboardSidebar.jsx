@@ -1,7 +1,7 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Globe, PlusCircle, User, LogOut, X, Inbox, ClipboardList } from "lucide-react";
+import { LayoutDashboard, Globe, PlusCircle, User, LogOut, X, Inbox, ClipboardList, ShieldCheck } from "lucide-react";
 
-const links = [
+const baseLinks = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/dashboard/websites", label: "My Websites", icon: Globe },
   { to: "/dashboard/requests", label: "Purchase Requests", icon: ClipboardList },
@@ -12,6 +12,9 @@ const links = [
 
 export default function DashboardSidebar({ onNavigate, showClose, onClose }) {
   const navigate = useNavigate();
+  const auth = JSON.parse(localStorage.getItem("sitetrade_auth") || "null");
+  const isAdmin = auth?.role === "admin";
+  const links = isAdmin ? [{ to: "/admin", label: "Admin Dashboard", icon: ShieldCheck }, ...baseLinks] : baseLinks;
 
   const handleLogout = () => {
     localStorage.removeItem("sitetrade_auth");
