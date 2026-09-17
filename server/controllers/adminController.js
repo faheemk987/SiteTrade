@@ -1,5 +1,7 @@
 const User = require("../models/User");
 const Website = require("../models/Website");
+const PurchaseRequest = require("../models/PurchaseRequest");
+const Transaction = require("../models/Transaction");
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -72,9 +74,12 @@ const deleteWebsite = async (req, res, next) => {
 // @access  Private/Admin
 const getStats = async (req, res, next) => {
   try {
-    const [totalUsers, totalWebsites] = await Promise.all([
+    const [totalUsers, totalWebsites, totalRequests, completedSales, commission] = await Promise.all([
       User.countDocuments(),
       Website.countDocuments(),
+      PurchaseRequest.countDocuments(),
+      PurchaseRequest.countDocuments({ status: "Completed" }),
+      Transaction.aggregate([{ $match: { status: "Completed" } }, { $group: { _id: null, total: { $sum: "$platformCommission" } } }]),
     ]);
 
     res.json({
@@ -85,6 +90,9 @@ const getStats = async (req, res, next) => {
         // There is no separate "inactive" status in this simple schema,
         // so every listing currently counts as an active listing.
         activeListings: totalWebsites,
+        totalRequests,
+        completedSales,
+        totalCommission: commission[0]?.total || 0,
       },
     });
   } catch (error) {
@@ -92,4 +100,26 @@ const getStats = async (req, res, next) => {
   }
 };
 
-module.exports = { getAllUsers, getAllWebsites, deleteUser, deleteWebsite, getStats };
+const getAllRequests = async (req, res, next) => {
+  try {
+    const requests = await PurchaseRequest.find()
+      .populate("buyer", "name email")
+      .populate("seller", "name email")
+      .populate("website", "name price")
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: requests });
+  } catch (error) { next(error); }
+};
+
+const getAllTransactions = async (req, res, next) => {
+  try {
+    const transactions = await Transaction.find()
+      .populate("buyer", "name email")
+      .populate("seller", "name email")
+      .populate("website", "name")
+      .sort({ createdAt: -1 });
+    res.json({ success: true, data: transactions });
+  } catch (error) { next(error); }
+};
+
+module.exports = { getAllUsers, getAllWebsites, deleteUser, deleteWebsite, getStats, getAllRequests, getAllTransactions };

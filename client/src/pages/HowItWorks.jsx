@@ -50,6 +50,7 @@ export default function HowItWorks() {
         <h2 className="font-display text-2xl text-charcoal">Have a website to sell?</h2>
         <Link
           to="/sell"
+          state={{ from: { pathname: "/sell" } }}
           className="inline-block mt-6 bg-charcoal text-cream px-6 py-3 rounded-md text-[15px] font-medium hover:bg-gold transition-colors"
         >
           List Your Website

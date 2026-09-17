@@ -4,7 +4,7 @@ import { UploadCloud, X } from "lucide-react";
 import Button from "@/components/Button";
 import { api } from "@/lib/api";
 import { categories } from "@/data/websites";
-import { isRequired, isValidEmail, isPositiveNumber } from "@/utils/validate";
+import { isRequired, isPositiveNumber } from "@/utils/validate";
 
 const emptyForm = {
   name: "",
@@ -17,7 +17,6 @@ const emptyForm = {
   database: "",
   hosting: "",
   price: "",
-  sellerEmail: "",
 };
 
 function Field({ label, error, children }) {
@@ -60,7 +59,6 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
     if (!isRequired(form.category)) newErrors.category = "Please select a category.";
     if (!isRequired(form.description)) newErrors.description = "Description is required.";
     if (!isPositiveNumber(form.price)) newErrors.price = "Enter a valid asking price.";
-    if (!isValidEmail(form.sellerEmail)) newErrors.sellerEmail = "Enter a valid email address.";
     return newErrors;
   };
 
@@ -84,7 +82,6 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
       hosting: form.hosting,
       screenshots: screenshots.map((item) => item.url),
       price: Number(form.price),
-      sellerEmail: form.sellerEmail,
     };
 
     try {
@@ -226,14 +223,6 @@ export default function WebsiteForm({ initialData, submitLabel = "List My Websit
               min="0"
               value={form.price}
               onChange={(e) => update("price", e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-          <Field label="Seller Email" error={errors.sellerEmail}>
-            <input
-              type="email"
-              value={form.sellerEmail}
-              onChange={(e) => update("sellerEmail", e.target.value)}
               className={inputClass}
             />
           </Field>

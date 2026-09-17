@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Button from "@/components/Button";
 import api from "@/lib/api";
 import { isRequired, isValidEmail, minLength } from "@/utils/validate";
 
 export default function Register() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ fullName: "", email: "", password: "", confirmPassword: "" });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
@@ -35,7 +36,7 @@ export default function Register() {
       });
 
       setSuccess(true);
-      setTimeout(() => navigate("/login"), 1200);
+      setTimeout(() => navigate(`/login${location.search}`, { state: location.state }), 1200);
     } catch (error) {
       setErrors({ form: error.friendlyMessage || error.message || "Registration failed." });
       setSuccess(false);
@@ -107,7 +108,7 @@ export default function Register() {
         )}
 
         <div className="mt-6 text-sm text-center">
-          <Link to="/login" className="text-gold hover:underline">Already have an account? Login</Link>
+          <Link to={`/login${location.search}`} state={location.state} className="text-gold hover:underline">Already have an account? Login</Link>
         </div>
       </div>
     </div>

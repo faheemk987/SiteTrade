@@ -1,7 +1,5 @@
 const Website = require("../models/Website");
 
-const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email || "");
-
 // @desc    Create a new website listing
 // @route   POST /api/websites
 // @access  Private
@@ -21,7 +19,6 @@ const createWebsite = async (req, res, next) => {
       hosting,
       screenshots,
       price,
-      sellerEmail,
     } = req.body;
 
     if (!name || !name.trim()) {
@@ -36,10 +33,6 @@ const createWebsite = async (req, res, next) => {
     if (price === undefined || price === null || Number(price) < 0) {
       return res.status(400).json({ success: false, message: "Price must be a number greater than or equal to 0" });
     }
-    if (!isValidEmail(sellerEmail)) {
-      return res.status(400).json({ success: false, message: "A valid seller email is required" });
-    }
-
     // Seller is always taken from the logged-in user, never from the request body.
     const website = await Website.create({
       seller: req.user._id,
@@ -56,7 +49,6 @@ const createWebsite = async (req, res, next) => {
       hosting,
       screenshots,
       price,
-      sellerEmail,
     });
 
     res.status(201).json({
@@ -75,7 +67,7 @@ const createWebsite = async (req, res, next) => {
 const getWebsites = async (req, res, next) => {
   try {
     const { search, category, technology, minPrice, maxPrice } = req.query;
-    const query = {};
+    const query = { listingStatus: { $ne: "Removed" } };
 
     if (search) {
       query.$or = [
@@ -100,7 +92,8 @@ const getWebsites = async (req, res, next) => {
     }
 
     const websites = await Website.find(query)
-      .populate("seller", "name email")
+      .select("-sellerEmail")
+      .populate("seller", "name")
       .sort({ createdAt: -1 });
 
     res.json({
@@ -118,7 +111,9 @@ const getWebsites = async (req, res, next) => {
 // @access  Public
 const getWebsiteById = async (req, res, next) => {
   try {
-    const website = await Website.findById(req.params.id).populate("seller", "name email");
+    const website = await Website.findOne({ _id: req.params.id, listingStatus: { $ne: "Removed" } })
+      .select("-sellerEmail")
+      .populate("seller", "name");
 
     if (!website) {
       return res.status(404).json({ success: false, message: "Website not found" });
@@ -162,7 +157,6 @@ const updateWebsite = async (req, res, next) => {
       "hosting",
       "screenshots",
       "price",
-      "sellerEmail",
     ];
 
     editableFields.forEach((field) => {

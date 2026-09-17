@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Bookmark,
   Check,
@@ -10,7 +10,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { api } from "@/lib/api";
-import { isRequired, isValidEmail } from "@/utils/validate";
+import { getStoredAuth, isAuthenticated } from "@/utils/auth";
 
 const actionButtons = [
   { label: "Save", icon: Bookmark },
@@ -20,6 +20,8 @@ const actionButtons = [
 
 export default function WebsiteDetails() {
   const { id } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [site, setSite] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -57,21 +59,28 @@ export default function WebsiteDetails() {
   }, [id]);
 
   const [activeImage, setActiveImage] = useState("");
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    message: "",
-    termsAccepted: false,
-  });
+  const [form, setForm] = useState({ message: "", proposedPrice: "" });
   const [errors, setErrors] = useState({});
-  const [sent, setSent] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
 
   useEffect(() => {
     setActiveImage(site?.screenshots?.[0] ?? "");
-    setSent(false);
-    setForm({ name: "", email: "", message: "", termsAccepted: false });
+    setPanelOpen(false);
+    setForm({ message: "", proposedPrice: "" });
     setErrors({});
   }, [site]);
+
+  useEffect(() => {
+    if (!site || !(location.state?.contact || location.state?.purchase)) return undefined;
+
+    const timer = window.setTimeout(() => {
+      setPanelOpen(true);
+      document.getElementById("request-panel")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      navigate(location.pathname, { replace: true, state: null });
+    }, 0);
+
+    return () => window.clearTimeout(timer);
+  }, [site, location.pathname, location.state, navigate]);
 
   if (loading) {
     return (
@@ -109,22 +118,56 @@ export default function WebsiteDetails() {
       maximumFractionDigits: 0,
     }).format(value);
 
-  const contactSeller = () => {
-    document.getElementById("contact-panel")?.scrollIntoView({
+  const redirectToLogin = () => {
+    navigate("/login", {
+      state: {
+        from: { pathname: `/website/${id}` },
+        contact: true,
+      },
+    });
+  };
+
+  const openRequestForm = async () => {
+    if (!isAuthenticated()) {
+      redirectToLogin();
+      return;
+    }
+
+    try {
+      await api.get("/auth/me");
+    } catch {
+      localStorage.removeItem("sitetrade_auth");
+      redirectToLogin();
+      return;
+    }
+
+    setPanelOpen(true);
+    document.getElementById("request-panel")?.scrollIntoView({
       behavior: "smooth",
       block: "start",
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const nextErrors = {};
 
-    if (!isRequired(form.name)) nextErrors.name = "Your full name is required.";
-    if (!isValidEmail(form.email)) nextErrors.email = "Enter a valid email address.";
-    if (!isRequired(form.message)) nextErrors.message = "Please write a short inquiry.";
-    if (!form.termsAccepted) {
-      nextErrors.termsAccepted = "Please accept the buyer inquiry terms.";
+    if (!isAuthenticated()) {
+      redirectToLogin();
+      return;
+    }
+
+    try {
+      await api.get("/auth/me");
+    } catch {
+      localStorage.removeItem("sitetrade_auth");
+      redirectToLogin();
+      return;
+    }
+
+    const nextErrors = {};
+    if (!form.message.trim()) nextErrors.message = "Please write a message.";
+    if (form.proposedPrice !== "" && (Number.isNaN(Number(form.proposedPrice)) || Number(form.proposedPrice) < 0)) {
+      nextErrors.proposedPrice = "Enter a valid proposed price.";
     }
 
     if (Object.keys(nextErrors).length > 0) {
@@ -132,9 +175,16 @@ export default function WebsiteDetails() {
       return;
     }
 
-    setSent(true);
-    setErrors({});
-    setForm({ name: "", email: "", message: "", termsAccepted: false });
+    try {
+      await api.post("/requests", {
+        website: site.id,
+        message: form.message,
+        proposedPrice: form.proposedPrice === "" ? null : Number(form.proposedPrice),
+      });
+      navigate("/dashboard/requests", { state: { success: "Your purchase request has been sent to the seller." } });
+    } catch (error) {
+      setErrors({ form: error.friendlyMessage || error.message || "Unable to send your request." });
+    }
   };
 
   const stats = [
@@ -291,12 +341,18 @@ export default function WebsiteDetails() {
 
             <button
               type="button"
-              onClick={contactSeller}
+              onClick={openRequestForm}
               className="mt-5 w-full rounded-xl bg-charcoal px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2F5D4F]"
             >
-              Contact Seller
+              Request to Buy
             </button>
-            <p className="mt-2 text-center text-xs text-charcoal-soft">1 active conversation</p>
+            <button
+              type="button"
+              onClick={openRequestForm}
+              className="mt-2 w-full rounded-xl border border-line bg-white px-4 py-3 text-sm font-medium text-charcoal transition-colors hover:border-gold hover:text-gold"
+            >
+              Message Seller
+            </button>
 
             <div className="mt-6 rounded-2xl border border-line bg-[#F7F4EC] p-4">
               <div className="flex items-center gap-3">
@@ -317,69 +373,42 @@ export default function WebsiteDetails() {
               </div>
             </div>
 
-            <div id="contact-panel" className="mt-6 rounded-2xl border border-line bg-white p-5">
-              <h3 className="font-display text-2xl text-charcoal">Contact Seller</h3>
-              <p className="mt-1 text-sm text-charcoal-soft">Send a message to the seller</p>
+            <div id="request-panel" className="mt-6 rounded-2xl border border-line bg-white p-5">
+              <h3 className="font-display text-2xl text-charcoal">Purchase Request</h3>
+              <p className="mt-1 text-sm text-charcoal-soft">Keep your conversation inside SiteTrade.</p>
 
-              {sent ? (
-                <div className="mt-5 rounded-xl border border-[#CFE0D7] bg-[#EAF3EE] p-4 text-sm text-[#2F5D4F]">
-                  <p className="font-semibold">Message sent successfully.</p>
-                  <p className="mt-1">The seller will reach out to you at the email address you provided.</p>
-                </div>
-              ) : (
+              {panelOpen && (
                 <form onSubmit={handleSubmit} className="mt-5 space-y-4">
+                  {errors.form && <p className="rounded-md border border-red/20 bg-red/5 px-3 py-2 text-xs text-red">{errors.form}</p>}
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Your Full Name</label>
-                    <input
-                      type="text"
-                      value={form.name}
-                      onChange={(e) => setForm({ ...form, name: e.target.value })}
-                      className="w-full rounded-md border border-line bg-[#F7F4EC] px-3.5 py-2.5 text-sm text-charcoal focus:border-gold focus:outline-none"
-                    />
-                    {errors.name && <p className="mt-1 text-xs text-red">{errors.name}</p>}
+                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Website Name</label>
+                    <input value={site.name} readOnly className="w-full rounded-md border border-line bg-[#F7F4EC] px-3.5 py-2.5 text-sm text-charcoal" />
                   </div>
-
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Your Email Address</label>
-                    <input
-                      type="email"
-                      value={form.email}
-                      onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full rounded-md border border-line bg-[#F7F4EC] px-3.5 py-2.5 text-sm text-charcoal focus:border-gold focus:outline-none"
-                    />
-                    {errors.email && <p className="mt-1 text-xs text-red">{errors.email}</p>}
+                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Buyer</label>
+                    <input value={`${getStoredAuth()?.name || "Current buyer"} (${getStoredAuth()?.email || "authenticated account"})`} readOnly className="w-full rounded-md border border-line bg-[#F7F4EC] px-3.5 py-2.5 text-sm text-charcoal" />
                   </div>
-
                   <div>
-                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Inquiry Message</label>
+                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Message</label>
                     <textarea
                       rows={5}
                       value={form.message}
                       onChange={(e) => setForm({ ...form, message: e.target.value })}
-                      placeholder="Share a few details about what you're looking for, your timeline, and any questions you have about the business."
+                      placeholder="Tell the seller about your timeline and offer."
                       className="w-full rounded-md border border-line bg-[#F7F4EC] px-3.5 py-2.5 text-sm text-charcoal placeholder:text-charcoal-soft focus:border-gold focus:outline-none"
                     />
                     {errors.message && <p className="mt-1 text-xs text-red">{errors.message}</p>}
                   </div>
-
-                  <label className="flex items-start gap-2 rounded-md border border-line bg-[#F7F4EC] p-3 text-sm text-charcoal-soft">
-                    <input
-                      type="checkbox"
-                      checked={form.termsAccepted}
-                      onChange={(e) => setForm({ ...form, termsAccepted: e.target.checked })}
-                      className="mt-0.5 h-4 w-4 rounded border-line text-[#2F5D4F] focus:ring-[#2F5D4F]"
-                    />
-                    <span>I agree to SiteTrade&apos;s terms for buyer inquiries.</span>
-                  </label>
-                  {errors.termsAccepted && (
-                    <p className="text-xs text-red">{errors.termsAccepted}</p>
-                  )}
-
+                  <div>
+                    <label className="mb-1.5 block text-sm font-medium text-charcoal">Proposed Price (optional)</label>
+                    <input type="number" min="0" value={form.proposedPrice} onChange={(e) => setForm({ ...form, proposedPrice: e.target.value })} className="w-full rounded-md border border-line bg-[#F7F4EC] px-3.5 py-2.5 text-sm text-charcoal focus:border-gold focus:outline-none" />
+                    {errors.proposedPrice && <p className="mt-1 text-xs text-red">{errors.proposedPrice}</p>}
+                  </div>
                   <button
                     type="submit"
                     className="w-full rounded-xl bg-charcoal px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#2F5D4F]"
                   >
-                    Send Direct Message
+                    Submit Request
                   </button>
 
                   <div className="flex items-center justify-center gap-2 text-xs font-medium text-charcoal-soft">

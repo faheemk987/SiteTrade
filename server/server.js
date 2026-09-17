@@ -10,6 +10,8 @@ const authRoutes = require("./routes/authRoutes");
 const websiteRoutes = require("./routes/websiteRoutes");
 const userRoutes = require("./routes/userRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const requestRoutes = require("./routes/requestRoutes");
+const messageRoutes = require("./routes/messageRoutes");
 
 // Connect to MongoDB Atlas before starting the server.
 connectDB();
@@ -17,9 +19,21 @@ connectDB();
 const app = express();
 
 // Allow the React frontend (configurable via CLIENT_URL) to call this API.
+const allowedOrigins = [
+  process.env.CLIENT_URL,
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+].filter(Boolean);
+
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
   })
 );
 
@@ -33,6 +47,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/websites", websiteRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
+app.use("/api/requests", requestRoutes);
+app.use("/api/messages", messageRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

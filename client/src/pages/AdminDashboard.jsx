@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { Users2, Globe2, ListChecks } from "lucide-react";
+import { Users2, Globe2, ListChecks, ClipboardList, BadgeDollarSign } from "lucide-react";
 import StatsCard from "@/components/StatsCard";
 import { api } from "@/lib/api";
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState({ totalUsers: 0, totalWebsites: 0, activeListings: 0 });
+  const [stats, setStats] = useState({ totalUsers: 0, totalWebsites: 0, activeListings: 0, totalRequests: 0, completedSales: 0, totalCommission: 0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -37,6 +37,9 @@ export default function AdminDashboard() {
           <StatsCard label="Total Users" value={stats.totalUsers} icon={Users2} />
           <StatsCard label="Total Websites" value={stats.totalWebsites} icon={Globe2} />
           <StatsCard label="Active Listings" value={stats.activeListings} icon={ListChecks} />
+          <StatsCard label="Purchase Requests" value={stats.totalRequests} icon={ClipboardList} />
+          <StatsCard label="Completed Sales" value={stats.completedSales} icon={BadgeDollarSign} />
+          <StatsCard label="Commission Earnings" value={`$${Number(stats.totalCommission || 0).toLocaleString()}`} icon={BadgeDollarSign} />
         </div>
       )}
     </div>

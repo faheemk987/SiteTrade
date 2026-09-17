@@ -54,9 +54,10 @@ const websiteSchema = new mongoose.Schema({
     required: [true, "Price is required"],
     min: [0, "Price must be greater than or equal to 0"],
   },
-  sellerEmail: {
+  listingStatus: {
     type: String,
-    required: [true, "Seller email is required"],
+    enum: ["Available", "Under Discussion", "Sold", "Removed"],
+    default: "Available",
   },
   createdAt: {
     type: Date,

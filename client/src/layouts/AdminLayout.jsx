@@ -5,6 +5,8 @@ const tabs = [
   { to: "/admin", label: "Dashboard", end: true },
   { to: "/admin/users", label: "Users" },
   { to: "/admin/websites", label: "Websites" },
+  { to: "/admin/requests", label: "Requests" },
+  { to: "/admin/transactions", label: "Transactions" },
 ];
 
 export default function AdminLayout() {

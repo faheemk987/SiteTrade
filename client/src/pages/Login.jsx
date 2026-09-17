@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Button from "@/components/Button";
 import api from "@/lib/api";
 import { isRequired, isValidEmail } from "@/utils/validate";
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -27,7 +28,14 @@ export default function Login() {
     try {
       const data = await api.post("/auth/login", { email: form.email, password: form.password });
       localStorage.setItem("sitetrade_auth", JSON.stringify(data));
-      navigate("/dashboard");
+      const queryRedirect = new URLSearchParams(location.search).get("redirect");
+      const destination = (queryRedirect?.startsWith("/") && !queryRedirect.startsWith("//") ? queryRedirect : null) || location.state?.from || "/dashboard";
+      navigate(destination, {
+        replace: true,
+        state: location.state?.contact || location.state?.purchase
+          ? { contact: location.state.contact, purchase: location.state.purchase }
+          : undefined,
+      });
     } catch (error) {
       setErrors({ form: error.friendlyMessage || error.message || "Login failed." });
     } finally {
@@ -71,7 +79,7 @@ export default function Login() {
 
         <div className="mt-6 flex items-center justify-between text-sm">
           <button type="button" className="text-charcoal-soft hover:text-charcoal">Forgot Password?</button>
-          <Link to="/register" className="text-gold hover:underline">Don&apos;t have an account? Register</Link>
+          <Link to={`/register${location.search}`} state={location.state} className="text-gold hover:underline">Don&apos;t have an account? Register</Link>
         </div>
       </div>
     </div>

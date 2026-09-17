@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, ArrowLeftRight, UserRound } from "lucide-react";
+import { isAuthenticated } from "@/utils/auth";
 
 const navLinks = [
   { to: "/", label: "Home" },
@@ -10,6 +11,14 @@ const navLinks = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSellWebsite = () => {
+    setOpen(false);
+    navigate(isAuthenticated() ? "/sell" : "/login?redirect=%2Fsell", isAuthenticated()
+      ? undefined
+      : { state: { from: { pathname: "/sell" } } });
+  };
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-line">
@@ -41,12 +50,13 @@ export default function Navbar() {
             <Link to="/login" className="text-[15px] text-charcoal-soft hover:text-charcoal transition-colors px-3 py-2">
               Login
             </Link>
-            <Link
-              to="/sell"
+            <button
+              type="button"
+              onClick={handleSellWebsite}
               className="text-[15px] bg-charcoal text-cream px-4 py-2 rounded-md hover:bg-gold transition-colors"
             >
               Sell Website
-            </Link>
+            </button>
             <button
               type="button"
               aria-label="User profile"
@@ -73,13 +83,13 @@ export default function Navbar() {
             <Link to="/login" className="text-charcoal-soft" onClick={() => setOpen(false)}>
               Login
             </Link>
-            <Link
-              to="/sell"
+            <button
+              type="button"
+              onClick={handleSellWebsite}
               className="bg-charcoal text-cream px-4 py-2 rounded-md text-center"
-              onClick={() => setOpen(false)}
             >
               Sell Website
-            </Link>
+            </button>
           </div>
         </div>
       )}

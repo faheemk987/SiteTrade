@@ -1,9 +1,11 @@
 import { NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Globe, PlusCircle, User, LogOut, X } from "lucide-react";
+import { LayoutDashboard, Globe, PlusCircle, User, LogOut, X, Inbox, ClipboardList } from "lucide-react";
 
 const links = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/dashboard/websites", label: "My Websites", icon: Globe },
+  { to: "/dashboard/requests", label: "Purchase Requests", icon: ClipboardList },
+  { to: "/dashboard/requests/received", label: "Received Requests", icon: Inbox },
   { to: "/sell", label: "Sell Website", icon: PlusCircle },
   { to: "/dashboard/profile", label: "Profile", icon: User },
 ];
