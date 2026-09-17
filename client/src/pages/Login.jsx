@@ -29,11 +29,15 @@ export default function Login() {
       const data = await api.post("/auth/login", { email: form.email, password: form.password });
       localStorage.setItem("sitetrade_auth", JSON.stringify(data));
       const queryRedirect = new URLSearchParams(location.search).get("redirect");
-      const destination = (queryRedirect?.startsWith("/") && !queryRedirect.startsWith("//") ? queryRedirect : null) || location.state?.from || "/dashboard";
+      const safeRedirect = queryRedirect?.startsWith("/") && !queryRedirect.startsWith("//")
+        ? queryRedirect
+        : null;
+      const destination = safeRedirect || location.state?.from || "/dashboard";
+      const action = new URLSearchParams(location.search).get("action");
       navigate(destination, {
         replace: true,
-        state: location.state?.contact || location.state?.purchase
-          ? { contact: location.state.contact, purchase: location.state.purchase }
+        state: action === "buy" || location.state?.contact || location.state?.purchase
+          ? { purchase: action === "buy" || location.state.purchase || location.state.contact }
           : undefined,
       });
     } catch (error) {

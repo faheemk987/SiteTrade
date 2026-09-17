@@ -119,11 +119,12 @@ export default function WebsiteDetails() {
     }).format(value);
 
   const redirectToLogin = () => {
-    navigate("/login", {
+    navigate(`/login?redirect=${encodeURIComponent(`/website/${id}`)}&action=buy`, {
       state: {
         from: { pathname: `/website/${id}` },
-        contact: true,
+        purchase: true,
       },
+      replace: false,
     });
   };
 

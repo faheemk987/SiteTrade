@@ -15,7 +15,8 @@ export default function Navbar() {
 
   const handleSellWebsite = () => {
     setOpen(false);
-    navigate(isAuthenticated() ? "/sell" : "/login?redirect=%2Fsell", isAuthenticated()
+    const authenticated = isAuthenticated();
+    navigate(authenticated ? "/sell" : "/login?redirect=%2Fsell", authenticated
       ? undefined
       : { state: { from: { pathname: "/sell" } } });
   };
