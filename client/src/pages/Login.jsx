@@ -28,6 +28,7 @@ export default function Login() {
     try {
       const data = await api.post("/auth/login", { email: form.email, password: form.password });
       localStorage.setItem("sitetrade_auth", JSON.stringify(data));
+      window.dispatchEvent(new Event("sitetrade-auth-changed"));
       const queryRedirect = new URLSearchParams(location.search).get("redirect");
       const safeRedirect = queryRedirect?.startsWith("/") && !queryRedirect.startsWith("//")
         ? queryRedirect

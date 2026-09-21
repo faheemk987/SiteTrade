@@ -1,6 +1,6 @@
 import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { isAuthenticated } from "@/utils/auth";
+import { clearAuth, isAuthenticated } from "@/utils/auth";
 import { api } from "@/lib/api";
 
 export default function ProtectedRoute() {
@@ -12,7 +12,7 @@ export default function ProtectedRoute() {
     let active = true;
 
     if (!isAuthenticated()) {
-      localStorage.removeItem("sitetrade_auth");
+      clearAuth();
       setChecking(false);
       return undefined;
     }
@@ -22,7 +22,7 @@ export default function ProtectedRoute() {
         if (active) setAuthenticated(true);
       })
       .catch(() => {
-        localStorage.removeItem("sitetrade_auth");
+        clearAuth();
         if (active) setAuthenticated(false);
       })
       .finally(() => {

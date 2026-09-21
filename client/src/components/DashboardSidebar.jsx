@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Globe, PlusCircle, User, LogOut, X, Inbox, ClipboardList, ShieldCheck } from "lucide-react";
+import { clearAuth, getStoredAuth } from "@/utils/auth";
 
 const baseLinks = [
   { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -12,13 +13,13 @@ const baseLinks = [
 
 export default function DashboardSidebar({ onNavigate, showClose, onClose }) {
   const navigate = useNavigate();
-  const auth = JSON.parse(localStorage.getItem("sitetrade_auth") || "null");
+  const auth = getStoredAuth();
   const isAdmin = auth?.role === "admin";
   const links = isAdmin ? [{ to: "/admin", label: "Admin Dashboard", icon: ShieldCheck }, ...baseLinks] : baseLinks;
 
   const handleLogout = () => {
-    localStorage.removeItem("sitetrade_auth");
-    navigate("/login");
+    clearAuth();
+    navigate("/login", { replace: true });
   };
 
   return (

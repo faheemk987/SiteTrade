@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Bookmark,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { api } from "@/lib/api";
 import { getStoredAuth, isAuthenticated } from "@/utils/auth";
+const fallbackImage = "https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80";
 
 const actionButtons = [
   { label: "Save", icon: Bookmark },
@@ -63,12 +64,29 @@ export default function WebsiteDetails() {
   const [errors, setErrors] = useState({});
   const [panelOpen, setPanelOpen] = useState(false);
 
+  const galleryImages = useMemo(
+    () => (site ? Array.from(new Set([site.image, ...(site.screenshots || [])].filter(Boolean))) : []),
+    [site]
+  );
+
   useEffect(() => {
-    setActiveImage(site?.screenshots?.[0] ?? "");
+    const images = site ? Array.from(new Set([site.image, ...(site.screenshots || [])].filter(Boolean))) : [];
+    const defaultImage = images[0] || fallbackImage;
+    setActiveImage((prev) => images.includes(prev) ? prev : defaultImage);
     setPanelOpen(false);
     setForm({ message: "", proposedPrice: "" });
     setErrors({});
   }, [site]);
+
+  const handleImageError = (event) => {
+    if (event.currentTarget.dataset.fallbackApplied === "true") {
+      event.currentTarget.style.display = "none";
+      return;
+    }
+
+    event.currentTarget.dataset.fallbackApplied = "true";
+    event.currentTarget.src = fallbackImage;
+  };
 
   useEffect(() => {
     if (!site || !(location.state?.contact || location.state?.purchase)) return undefined;
@@ -230,20 +248,18 @@ export default function WebsiteDetails() {
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.7fr)_minmax(300px,0.9fr)]">
         <div className="space-y-8">
-          <div className="rounded-2xl border border-line bg-white p-2 shadow-[0_10px_30px_rgba(38,35,32,0.04)]">
-            <div className="flex items-center gap-2 rounded-t-xl border-b border-line bg-[#F2EEE6] px-3 py-2">
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D0C4B0]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D0C4B0]" />
-              <span className="h-2.5 w-2.5 rounded-full bg-[#D0C4B0]" />
-            </div>
-            <div className="overflow-hidden rounded-b-xl">
-              <img src={activeImage} alt={site.name} className="h-[380px] w-full object-cover sm:h-[460px]" />
-            </div>
+          <div className="overflow-hidden rounded-2xl border border-line bg-white shadow-[0_10px_30px_rgba(38,35,32,0.04)]">
+            <img
+              src={activeImage || fallbackImage}
+              alt={site.name}
+              onError={handleImageError}
+              className="h-[380px] w-full object-cover sm:h-[460px]"
+            />
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap gap-3">
-              {site.screenshots.map((shot, index) => (
+              {galleryImages.map((shot, index) => (
                 <button
                   key={`${shot}-${index}`}
                   type="button"
@@ -253,7 +269,7 @@ export default function WebsiteDetails() {
                   }`}
                   aria-label={`View screenshot ${index + 1}`}
                 >
-                  <img src={shot} alt="" className="h-full w-full object-cover" />
+                  <img src={shot} alt={`${site.name} preview ${index + 1}`} onError={handleImageError} className="h-full w-full object-cover" />
                 </button>
               ))}
             </div>

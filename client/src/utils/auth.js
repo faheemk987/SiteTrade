@@ -7,6 +7,10 @@ export function getStoredAuth() {
   }
 }
 
+export function clearAuth() {
+  localStorage.removeItem("sitetrade_auth");
+}
+
 export function isAuthenticated() {
   const token = getStoredAuth()?.token;
 

@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { Menu, X, ArrowLeftRight, UserRound } from "lucide-react";
-import { isAuthenticated } from "@/utils/auth";
+import { clearAuth, getStoredAuth, isAuthenticated } from "@/utils/auth";
 
 const baseNavLinks = [
   { to: "/", label: "Home" },
@@ -11,17 +11,36 @@ const baseNavLinks = [
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [auth, setAuth] = useState(getStoredAuth);
   const navigate = useNavigate();
-  const auth = JSON.parse(localStorage.getItem("sitetrade_auth") || "null");
   const isAdmin = auth?.role === "admin";
+  const authenticated = Boolean(auth?.token) && isAuthenticated();
   const navLinks = isAdmin ? [...baseNavLinks, { to: "/admin", label: "Admin Dashboard" }] : baseNavLinks;
+
+  useEffect(() => {
+    const syncAuth = () => setAuth(getStoredAuth());
+    window.addEventListener("storage", syncAuth);
+    window.addEventListener("sitetrade-auth-changed", syncAuth);
+
+    return () => {
+      window.removeEventListener("storage", syncAuth);
+      window.removeEventListener("sitetrade-auth-changed", syncAuth);
+    };
+  }, []);
 
   const handleSellWebsite = () => {
     setOpen(false);
-    const authenticated = isAuthenticated();
     navigate(authenticated ? "/sell" : "/login?redirect=%2Fsell", authenticated
       ? undefined
       : { state: { from: { pathname: "/sell" } } });
+  };
+
+  const handleLogout = () => {
+    clearAuth();
+    setAuth(null);
+    setOpen(false);
+    window.dispatchEvent(new Event("sitetrade-auth-changed"));
+    navigate("/login", { replace: true });
   };
 
   return (
@@ -51,9 +70,15 @@ export default function Navbar() {
           </nav>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login" className="text-[15px] text-charcoal-soft hover:text-charcoal transition-colors px-3 py-2">
-              Login
-            </Link>
+            {authenticated ? (
+              <button type="button" onClick={handleLogout} className="text-[15px] text-charcoal-soft hover:text-charcoal transition-colors px-3 py-2">
+                Logout
+              </button>
+            ) : (
+              <Link to="/login" className="text-[15px] text-charcoal-soft hover:text-charcoal transition-colors px-3 py-2">
+                Login
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleSellWebsite}
@@ -84,9 +109,15 @@ export default function Navbar() {
             </Link>
           ))}
           <div className="flex flex-col gap-3 pt-2 border-t border-line">
-            <Link to="/login" className="text-charcoal-soft" onClick={() => setOpen(false)}>
-              Login
-            </Link>
+            {authenticated ? (
+              <button type="button" className="text-left text-charcoal-soft" onClick={handleLogout}>
+                Logout
+              </button>
+            ) : (
+              <Link to="/login" className="text-charcoal-soft" onClick={() => setOpen(false)}>
+                Login
+              </Link>
+            )}
             <button
               type="button"
               onClick={handleSellWebsite}

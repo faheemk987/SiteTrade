@@ -18,17 +18,15 @@ connectDB();
 
 const app = express();
 
-// Allow the React frontend (configurable via CLIENT_URL) to call this API.
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  "http://localhost:5173",
-  "http://127.0.0.1:5173",
-].filter(Boolean);
+// Allow the React frontend to use any Vite development port on local hosts.
+const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
+const localDevelopmentOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/;
+const privateNetworkOrigin = /^https?:\/\/(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
 
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
+      if (!origin || allowedOrigins.includes(origin) || localDevelopmentOrigin.test(origin) || privateNetworkOrigin.test(origin)) {
         callback(null, true);
       } else {
         callback(new Error("Not allowed by CORS"));
