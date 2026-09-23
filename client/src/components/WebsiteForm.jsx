@@ -30,7 +30,7 @@ function Field({ label, error, children }) {
 }
 
 const inputClass =
-  "w-full rounded-md border border-line bg-cream px-3.5 py-2.5 text-sm text-charcoal placeholder:text-charcoal-soft/70 focus:outline-none focus:border-gold";
+  "w-full rounded-md border border-line bg-white px-3.5 py-2.5 text-sm text-charcoal placeholder:text-charcoal-soft/70 focus:outline-none focus:border-gold";
 
 export default function WebsiteForm({ initialData, submitLabel = "List My Website", onSubmit }) {
   const navigate = useNavigate();
