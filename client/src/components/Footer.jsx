@@ -24,11 +24,11 @@ const supportLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-white">
-      <div className="max-w-7xl ml-0 mr-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 md:gap-8 gap-10 text-left justify-items-start">
-          <div >
-            <div className="flex items-center gap-2 text-black text-xl  font-bold">
+    <footer className="border-t border-gray-200 bg-white">
+      <div className="max-w-7xl ml-0 mr-auto px-4 py-12 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 text-left md:grid-cols-[1.3fr_1fr_1fr_1.25fr] md:gap-12">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-xl font-bold text-black">
               <TrendingUp size={18} className="text-gray-900" />
               <span>SiteTrade</span>
             </div>
@@ -41,7 +41,7 @@ export default function Footer() {
             <p className="mt-8 text-xs text-gray-500">© 2025 SiteTrade Inc. All rights reserved.</p>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-900">QUICK LINKS</h3>
             <div className="mt-4 space-y-3 text-sm text-gray-600 flex flex-col">
               {quickLinks.map((link) => (
@@ -52,7 +52,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-900">CATEGORIES</h3>
             <div className="mt-4 space-y-3 text-sm text-gray-600 flex flex-col">
               {categories.map((link) => (
@@ -63,7 +63,7 @@ export default function Footer() {
             </div>
           </div>
 
-          <div>
+          <div className="min-w-0">
             <h3 className="text-sm font-semibold tracking-wider uppercase text-gray-900">
               SUPPORT &amp; TRUST
             </h3>
