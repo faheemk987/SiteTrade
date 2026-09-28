@@ -36,6 +36,15 @@ export default function AdminUsers() {
     }
   };
 
+  const updateStatus = async (user, status) => {
+    try {
+      const data = await api.put(`/admin/users/${user._id || user.id}/status`, { status });
+      setUsers((prev) => prev.map((item) => (item._id || item.id) === (user._id || user.id) ? data : item));
+    } catch (err) {
+      setError(err.friendlyMessage || err.message || "Unable to update user status.");
+    }
+  };
+
   return (
     <div>
       <h1 className="font-display text-3xl text-charcoal">Users</h1>
@@ -53,6 +62,7 @@ export default function AdminUsers() {
                 <th className="px-5 py-3 font-medium">Email</th>
                 <th className="px-5 py-3 font-medium">Joined Date</th>
                 <th className="px-5 py-3 font-medium">Role</th>
+                <th className="px-5 py-3 font-medium">Status</th>
                 <th className="px-5 py-3 font-medium">Actions</th>
               </tr>
             </thead>
@@ -68,8 +78,17 @@ export default function AdminUsers() {
                     <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">{user.role}</span>
                   </td>
                   <td className="px-5 py-3">
+                    <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">
+                      {user.role === "admin" ? "approved" : user.status || "approved"}
+                    </span>
+                  </td>
+                  <td className="px-5 py-3">
                     <div className="flex gap-3 text-sm">
                       <button className="text-charcoal-soft hover:text-charcoal">View</button>
+                      {user.role !== "admin" && (user.status || "approved") === "pending" && <>
+                        <button onClick={() => updateStatus(user, "approved")} className="text-[#2F5D4F] hover:underline">Approve</button>
+                        <button onClick={() => updateStatus(user, "rejected")} className="text-red hover:underline">Reject</button>
+                      </>}
                       <button onClick={() => setToDelete(user)} className="text-red hover:underline">Delete</button>
                     </div>
                   </td>

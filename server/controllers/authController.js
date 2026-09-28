@@ -34,18 +34,20 @@ const registerUser = async (req, res, next) => {
     }
 
     const role = getEffectiveRole(normalizedEmail);
-    const user = await User.create({ name, email: normalizedEmail, password, role });
-    const token = generateToken(user._id, user.role);
+    const status = role === "admin" ? "approved" : "pending";
+    const user = await User.create({ name, email: normalizedEmail, password, role, status });
 
     res.status(201).json({
       success: true,
-      message: "Account created successfully",
+      message: role === "admin"
+        ? "Account created successfully"
+        : "Your account has been created and is waiting for admin approval.",
       data: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
-        token,
+        status: user.status,
       },
     });
   } catch (error) {
@@ -73,10 +75,26 @@ const loginUser = async (req, res, next) => {
     const expectedRole = getEffectiveRole(user.email);
     if (user.role !== expectedRole) {
       user.role = expectedRole;
-      await user.save();
     }
 
+    if (user.role !== "admin") {
+      if (user.status === "pending") {
+        return res.status(403).json({ success: false, message: "Your account is waiting for admin approval." });
+      }
+      if (user.status === "rejected") {
+        return res.status(403).json({ success: false, message: "Your account has been rejected by the administrator." });
+      }
+      // Accounts created before the status field was introduced remain approved.
+      if (!user.status) user.status = "approved";
+    } else {
+      user.status = "approved";
+    }
+
+    if (user.isModified()) await user.save();
+
     const token = generateToken(user._id, user.role);
+
+   
 
     res.json({
       success: true,
@@ -86,6 +104,7 @@ const loginUser = async (req, res, next) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        status: user.status,
         token,
       },
     });

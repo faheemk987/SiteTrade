@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Website = require("../models/Website");
 const PurchaseRequest = require("../models/PurchaseRequest");
 const Transaction = require("../models/Transaction");
+const userStatuses = ["pending", "approved", "rejected"];
 
 // @desc    Get all users
 // @route   GET /api/admin/users
@@ -10,7 +11,50 @@ const getAllUsers = async (req, res, next) => {
   try {
     const users = await User.find().select("-password").sort({ createdAt: -1 });
 
+    const data = users.map((user) => ({
+      ...user.toObject(),
+      status: user.status || "approved",
+    }));
+
+    res.json({ success: true, count: data.length, data });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getPendingUsers = async (req, res, next) => {
+  try {
+    const users = await User.find({ role: "user", status: "pending" })
+      .select("-password")
+      .sort({ createdAt: -1 });
+
     res.json({ success: true, count: users.length, data: users });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const updateUserStatus = async (req, res, next) => {
+  try {
+    const { status } = req.body;
+    if (!userStatuses.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid user status" });
+    }
+
+    const user = await User.findById(req.params.id).select("-password");
+    if (!user) return res.status(404).json({ success: false, message: "User not found" });
+    if (user.role === "admin") {
+      return res.status(400).json({ success: false, message: "Admin accounts do not require approval" });
+    }
+
+    user.status = status;
+    await user.save();
+
+    res.json({
+      success: true,
+      message: `User ${status} successfully.`,
+      data: { ...user.toObject(), status: user.status },
+    });
   } catch (error) {
     next(error);
   }
@@ -122,4 +166,4 @@ const getAllTransactions = async (req, res, next) => {
   } catch (error) { next(error); }
 };
 
-module.exports = { getAllUsers, getAllWebsites, deleteUser, deleteWebsite, getStats, getAllRequests, getAllTransactions };
+module.exports = { getAllUsers, getPendingUsers, updateUserStatus, getAllWebsites, deleteUser, deleteWebsite, getStats, getAllRequests, getAllTransactions };

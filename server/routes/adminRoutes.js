@@ -2,6 +2,8 @@ const express = require("express");
 const router = express.Router();
 const {
   getAllUsers,
+  getPendingUsers,
+  updateUserStatus,
   getAllWebsites,
   deleteUser,
   deleteWebsite,
@@ -16,6 +18,8 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 router.use(authMiddleware, adminMiddleware);
 
 router.get("/users", getAllUsers);
+router.get("/users/pending", getPendingUsers);
+router.put("/users/:id/status", updateUserStatus);
 router.delete("/users/:id", deleteUser);
 router.get("/websites", getAllWebsites);
 router.delete("/websites/:id", deleteWebsite);

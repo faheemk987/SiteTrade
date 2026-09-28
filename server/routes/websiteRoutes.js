@@ -8,13 +8,14 @@ const {
   deleteWebsite,
 } = require("../controllers/websiteController");
 const authMiddleware = require("../middleware/authMiddleware");
+const approvalMiddleware = require("../middleware/approvalMiddleware");
 
-router.route("/").get(getWebsites).post(authMiddleware, createWebsite);
+router.route("/").get(getWebsites).post(authMiddleware, approvalMiddleware, createWebsite);
 
 router
   .route("/:id")
   .get(getWebsiteById)
-  .put(authMiddleware, updateWebsite)
-  .delete(authMiddleware, deleteWebsite);
+  .put(authMiddleware, approvalMiddleware, updateWebsite)
+  .delete(authMiddleware, approvalMiddleware, deleteWebsite);
 
 module.exports = router;

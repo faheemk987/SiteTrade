@@ -37,7 +37,7 @@ axiosInstance.interceptors.response.use(
       } else if (status === 401) {
         error.friendlyMessage = "Please log in to continue.";
       } else if (status === 403) {
-        error.friendlyMessage = "You don't have permission to do that.";
+        error.friendlyMessage = backendMessage || "You don't have permission to do that.";
       } else if (status === 404) {
         error.friendlyMessage = backendMessage || "Not found.";
       } else {

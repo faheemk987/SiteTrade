@@ -53,7 +53,7 @@ export default function Register() {
 
         {success ? (
           <div className="mt-8 bg-gold-soft text-charcoal text-sm rounded-md px-4 py-3">
-            Account created. Redirecting to login…
+            Account created. Your account is waiting for admin approval. Redirecting to login…
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
