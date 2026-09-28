@@ -13,7 +13,7 @@ const getAllUsers = async (req, res, next) => {
 
     const data = users.map((user) => ({
       ...user.toObject(),
-      status: user.status || "approved",
+      status: user.status || "pending",
     }));
 
     res.json({ success: true, count: data.length, data });
@@ -24,7 +24,10 @@ const getAllUsers = async (req, res, next) => {
 
 const getPendingUsers = async (req, res, next) => {
   try {
-    const users = await User.find({ role: "user", status: "pending" })
+    const users = await User.find({
+      role: "user",
+      $or: [{ status: "pending" }, { status: { $exists: false } }],
+    })
       .select("-password")
       .sort({ createdAt: -1 });
 
@@ -82,6 +85,9 @@ const deleteUser = async (req, res, next) => {
 
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
+    }
+    if (user.role === "admin") {
+      return res.status(400).json({ success: false, message: "Admin accounts cannot be deleted here" });
     }
 
     // Remove the user's listings too, so no orphaned websites are left behind.

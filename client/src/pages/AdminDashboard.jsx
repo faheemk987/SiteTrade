@@ -94,7 +94,7 @@ export default function AdminDashboard() {
                 <th className="px-5 py-3 font-medium">Action</th>
               </tr></thead>
               <tbody>{users.map((user) => {
-                const status = user.role === "admin" ? "approved" : user.status || "approved";
+                const status = user.role === "admin" ? "approved" : user.status || "pending";
                 return (
                   <tr key={user._id || user.id} className="border-b border-line last:border-0">
                     <td className="px-5 py-3 text-charcoal">{user.name}</td>

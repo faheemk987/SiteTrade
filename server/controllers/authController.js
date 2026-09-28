@@ -84,8 +84,7 @@ const loginUser = async (req, res, next) => {
       if (user.status === "rejected") {
         return res.status(403).json({ success: false, message: "Your account has been rejected by the administrator." });
       }
-      // Accounts created before the status field was introduced remain approved.
-      if (!user.status) user.status = "approved";
+      if (!user.status) user.status = "pending";
     } else {
       user.status = "approved";
     }

@@ -26,9 +26,12 @@ export default function AdminUsers() {
   }, []);
 
   const confirmDelete = async () => {
+    const userId = toDelete?._id || toDelete?.id;
+    if (!userId) return;
+
     try {
-      await api.delete(`/admin/users/${toDelete.id}`);
-      setUsers((prev) => prev.filter((u) => (u._id || u.id) !== (toDelete._id || toDelete.id)));
+      await api.delete(`/admin/users/${userId}`);
+      setUsers((prev) => prev.filter((u) => (u._id || u.id) !== userId));
       setToDelete(null);
     } catch (error) {
       setToDelete(null);
@@ -79,13 +82,13 @@ export default function AdminUsers() {
                   </td>
                   <td className="px-5 py-3">
                     <span className="text-xs bg-gold-soft text-charcoal px-2 py-0.5 rounded-md">
-                      {user.role === "admin" ? "approved" : user.status || "approved"}
+                      {user.role === "admin" ? "approved" : user.status || "pending"}
                     </span>
                   </td>
                   <td className="px-5 py-3">
                     <div className="flex gap-3 text-sm">
                       <button className="text-charcoal-soft hover:text-charcoal">View</button>
-                      {user.role !== "admin" && (user.status || "approved") === "pending" && <>
+                      {user.role !== "admin" && (user.status || "pending") === "pending" && <>
                         <button onClick={() => updateStatus(user, "approved")} className="text-[#2F5D4F] hover:underline">Approve</button>
                         <button onClick={() => updateStatus(user, "rejected")} className="text-red hover:underline">Reject</button>
                       </>}
