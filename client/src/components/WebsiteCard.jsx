@@ -3,18 +3,6 @@ import { ArrowRight, Lock, ShieldCheck } from "lucide-react";
 
 const formatCurrency = (amount) => `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(amount)}`;
 
-const getMockMetrics = (price) => {
-  const ttmRevenue = Math.round(price * 14.84);
-  const netProfit = Math.round(price * 11.72);
-  const multiple = (price / 1800).toFixed(1);
-
-  return [
-    { label: "TTM REV", value: formatCurrency(ttmRevenue) },
-    { label: "NET PROFIT", value: formatCurrency(netProfit) },
-    { label: "MULTIPLE", value: `${multiple}x` },
-  ];
-};
-
 export default function WebsiteCard({
   id,
   name,
@@ -32,8 +20,6 @@ export default function WebsiteCard({
     category === "SaaS"
       ? "border-[#D8B06A]/50 bg-[#F3E0B6]/40 text-[#A87F2E]"
       : "border-emerald-200 bg-emerald-50 text-emerald-700";
-
-  const metrics = getMockMetrics(price);
 
   return (
     <Link
@@ -88,19 +74,6 @@ export default function WebsiteCard({
         {description && (
           <p className="mt-3 text-sm leading-6 text-charcoal-soft">{description}</p>
         )}
-
-        <div className="mt-4 rounded-xl border border-[#E6E0D2] bg-[#F9F7F2] p-3">
-          <div className="grid grid-cols-3 gap-2">
-            {metrics.map((metric) => (
-              <div key={metric.label} className="rounded-lg border border-[#E6E0D2] bg-white p-2 text-center">
-                <p className="text-[10px] font-medium uppercase tracking-[0.08em] text-charcoal-soft">
-                  {metric.label}
-                </p>
-                <p className="mt-1 font-display text-lg text-charcoal">{metric.value}</p>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {technology && technology.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-2">
