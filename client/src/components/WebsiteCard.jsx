@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Lock, ShieldCheck } from "lucide-react";
+import { ArrowRight, ShieldCheck } from "lucide-react";
 
 const formatCurrency = (amount) => `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(amount)}`;
 
@@ -14,7 +14,6 @@ export default function WebsiteCard({
   hosting,
   age,
 }) {
-  const domain = `${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.io`;
   const statusText = category === "SaaS" ? "Verified Listing" : "Active";
   const statusClasses =
     category === "SaaS"
@@ -26,24 +25,6 @@ export default function WebsiteCard({
       to={`/website/${id}`}
       className="group block overflow-hidden rounded-[1.5rem] border border-[#E6E0D2] bg-white shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-[#A87F2E]/60 hover:shadow-md"
     >
-      <div className="border-b border-[#E6E0D2] bg-[#F9F7F2] p-3">
-        <div className="flex items-center gap-2">
-          <span className="h-2.5 w-2.5 rounded-full bg-[#F6B0A6]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#F5D387]" />
-          <span className="h-2.5 w-2.5 rounded-full bg-[#A9D7B3]" />
-        </div>
-
-        <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#E6E0D2] bg-white px-2.5 py-1.5">
-          <div className="flex items-center gap-2 text-[11px] text-charcoal-soft">
-            <Lock size={12} className="text-charcoal-soft" />
-            {domain}
-          </div>
-          <span className="rounded-full border border-[#E6E0D2] bg-[#F9F7F2] px-2 py-0.5 text-[10px] font-medium uppercase tracking-[0.08em] text-charcoal-soft">
-            secure
-          </span>
-        </div>
-      </div>
-
       <div className="h-44 w-full overflow-hidden bg-[#F0E9DF]">
         <img src={image} alt={`${name} screenshot`} className="h-full w-full object-cover" loading="lazy" />
       </div>
