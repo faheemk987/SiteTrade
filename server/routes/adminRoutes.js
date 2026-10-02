@@ -16,7 +16,7 @@ const adminMiddleware = require("../middleware/adminMiddleware");
 
 // Every route in this file requires a logged-in admin.
 router.use(authMiddleware, adminMiddleware);
-
+faheem khan yes
 router.get("/users", getAllUsers);
 router.get("/users/pending", getPendingUsers);
 router.put("/users/:id/status", updateUserStatus);
