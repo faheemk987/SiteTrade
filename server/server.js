@@ -18,16 +18,25 @@ connectDB();
 
 const app = express();
 
-// Allow the React frontend to use any Vite development port on local hosts.
-const allowedOrigins = [process.env.CLIENT_URL].filter(Boolean);
-const localDevelopmentOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:\d+)?$/;
-const privateNetworkOrigin = /^https?:\/\/(10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[0-1])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
-
-app.use(
-  cors({
-    origin: "*",
-  })
+const allowedOrigins = new Set(
+  ["http://localhost:5173", process.env.CLIENT_URL].filter(Boolean)
 );
+const vercelFrontendOrigin = /^https:\/\/[a-z0-9-]+(?:-[a-z0-9-]+)*\.vercel\.app$/i;
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin || allowedOrigins.has(origin) || vercelFrontendOrigin.test(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(null, false);
+  },
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  optionsSuccessStatus: 204,
+};
+
+app.options("*", cors(corsOptions));
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
